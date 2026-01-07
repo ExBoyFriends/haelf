@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pokepoke Style Card</title>
+<title>Pokepoke Fast Rotate Card</title>
 <style>
 body {
 margin: 0;
@@ -75,7 +75,7 @@ let autoRotate = true; // 自動回転ON/OFF
 let isDragging = false; // ドラッグ中か
 let lastX = 0; // 前フレームのX座標
 
-const AUTO_SPEED = 30; // 1秒で30度回転 → 180度6秒
+const AUTO_SPEED = 90; // 自動回転速度（1秒で90度回転）
 
 // 自動回転ループ（フレームレート補正付き）
 let lastTime = performance.now();
@@ -84,8 +84,8 @@ const delta = time - lastTime;
 lastTime = time;
 
 if (autoRotate && !isDragging) {
-rotation += AUTO_SPEED * (delta / 1000); // deltaはmsなので1000で秒換算
-rotation %= 360;
+rotation += AUTO_SPEED * (delta / 1000); // 秒換算
+rotation %= 360; // 360度ごとにリセット
 card.style.transform = `rotateY(${rotation}deg)`;
 }
 
