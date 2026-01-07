@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Natural Rotating Card</title>
+<title>Realistic Rotating Card</title>
 <style>
 html, body {
 margin: 0;
@@ -26,8 +26,7 @@ touch-action: pan-x pan-y;
 width: 90vw;
 max-width: 260px;
 aspect-ratio: 260 / 400;
-height: auto;
-perspective: 1200px; /* 遠近感 */
+perspective: 1200px; /* 奥行き感 */
 }
 
 /* カード */
@@ -38,7 +37,7 @@ position: relative;
 transform-style: preserve-3d;
 user-select: none;
 touch-action: none;
-border-radius: 12px; /* 丸角 */
+border-radius: 12px;
 }
 
 /* 表裏共通 */
@@ -51,6 +50,7 @@ background-position: center;
 background-repeat: no-repeat;
 overflow: hidden;
 border-radius: 12px;
+transition: filter 0.1s;
 }
 
 /* 表面の反射 */
@@ -116,15 +116,21 @@ const SPEED = 1.6;
 const DRAG_LIMIT = 55;
 const DRAG_SENS = 0.3;
 
-/* 光の反射を角度に応じて変える */
+/* 光と明るさを角度に応じて変える */
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
 
-// 光の位置を回転角度に応じて計算（右側が遠ざかる雰囲気）
 const rad = rotation * Math.PI / 180;
-const shineX = Math.sin(rad) * 30; // -30%〜30%の移動
+
+// 光の反射の横位置
+const shineX = Math.sin(rad) * 30; // -30%〜30%
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
+
+// 左右の明るさで奥行き感を強調
+const brightness = 0.85 + 0.15 * Math.sin(rad); // 左手前・右奥
+front.style.filter = `brightness(${brightness})`;
+back.style.filter = `brightness(${brightness})`;
 }
 
 /* 自動回転 */
