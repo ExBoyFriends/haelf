@@ -99,6 +99,15 @@ const SIDE_ZONE = 15;
 const BOOST_RATE = 0.35;
 
 let lastTime = performance.now();
+
+/* ===== 厚み ===== */
+function updateEdge() {
+const a = ((rotation % 360) + 360) % 360;
+const d = Math.abs(90 - (a % 180));
+const t = Math.max(0, 1 - d / 40);
+
+card.style.setProperty('--edge-w', `${2 + t * 6}px`);
+card.style.setProperty('--edge-a', 0.12 + t * 0.35);
 }
 
 /* ===== 自動回転 ===== */
