@@ -34,12 +34,15 @@ height: 100%;
 position: relative;
 transform-style: preserve-3d;
 transform-origin: center center;
+  
 cursor: grab;
 user-select: none;
 touch-action: none;
 
+  overflow: hidden;
+
 /* 浮かせない・ケース感 */
-box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+box-shadow: 0 2px 4px rgba(0,0,0,0.12);
 }
 
 .card:active {
@@ -49,11 +52,16 @@ cursor: grabbing;
 /* ===== 表裏共通 ===== */
 .side {
 position: absolute;
-inset: 0;
+
+top: -2px;
+left: -2px;
+right: -2px;
+bottom: -2px;
+  
 backface-visibility: hidden;
 
 /* 画像を完全密着 */
-background-size: cover;
+background-size: 100% 100%;
 background-position: center;
 background-repeat: no-repeat;
 }
