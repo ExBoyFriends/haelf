@@ -3,7 +3,6 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rotating Card Final</title>
 
 <style>
 html, body {
@@ -19,7 +18,6 @@ justify-content: center;
 align-items: center;
 }
 
-/* ===== ラッパー ===== */
 .wrap {
 position: relative;
 width: 260px;
@@ -27,18 +25,15 @@ height: 400px;
 perspective: 1200px;
 }
 
-/* ケース縁（回らない） */
 .wrap::before {
 content: '';
 position: absolute;
 inset: 0;
 border: 1px solid rgba(0,0,0,0.18);
 box-shadow: 0 0 0 1px rgba(255,255,255,0.25) inset;
-border-radius: 2px;
 pointer-events: none;
 }
 
-/* ===== カード ===== */
 .card {
 width: 100%;
 height: 100%;
@@ -49,11 +44,6 @@ user-select: none;
 touch-action: none;
 }
 
-.card:active {
-cursor: grabbing;
-}
-
-/* 疑似的な厚み */
 .card::before,
 .card::after {
 content: '';
@@ -68,14 +58,12 @@ pointer-events: none;
 .card::before { left: 0; }
 .card::after { right: 0; }
 
-/* ===== 表裏 ===== */
 .face {
 position: absolute;
 inset: 0;
 backface-visibility: hidden;
 background-size: cover;
 background-position: center;
-background-repeat: no-repeat;
 }
 
 .front {
@@ -101,32 +89,29 @@ transform: rotateY(180deg);
 <script>
 const card = document.getElementById('card');
 
-/* ===== 状態 ===== */
 let rotation = 0;
 let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
-let dragBaseRotation = 0;
 
-/* ===== パラメータ ===== */
-const SPEED = 0.1; // 自動回転速度（deg/ms）
-const DRAG_LIMIT = 35; // 手動操作の可動幅
-const SIDE_ZONE = 15; // 真横前後の加速ゾーン
-const BOOST_RATE = 0.35; // 加速率
+/* ★ 手動操作の中心（常に正面） */
+let manualCenter = 0;
+
+const SPEED = 0.4;
+const DRAG_LIMIT = 40; // ← 常にこの幅だけ見える
+const SIDE_ZONE = 15;
+const BOOST_RATE = 0.35;
 
 let lastTime = performance.now();
 
-/* ===== 厚み演出 ===== */
+/* ===== 厚み ===== */
 function updateEdge() {
 const a = ((rotation % 360) + 360) % 360;
 const d = Math.abs(90 - (a % 180));
 const t = Math.max(0, 1 - d / 40);
 
-const w = 2 + t * 6;
-const alpha = 0.12 + t * 0.35;
-
-card.style.setProperty('--edge-w', `${w}px`);
-card.style.setProperty('--edge-a', alpha);
+card.style.setProperty('--edge-w', `${2 + t * 6}px`);
+card.style.setProperty('--edge-a', 0.12 + t * 0.35);
 }
 
 /* ===== 自動回転 ===== */
@@ -136,13 +121,10 @@ lastTime = time;
 
 if (autoRotate && !isDragging) {
 let speed = SPEED;
+const a = ((rotation % 360) + 360) % 360;
 
-const angle = ((rotation % 360) + 360) % 360;
-const near90 = Math.abs(angle - 90) < SIDE_ZONE;
-const near270 = Math.abs(angle - 270) < SIDE_ZONE;
-
-if (near90 || near270) {
-speed *= (1 + BOOST_RATE);
+if (Math.abs(a - 90) < SIDE_ZONE || Math.abs(a - 270) < SIDE_ZONE) {
+speed *= 1 + BOOST_RATE;
 }
 
 rotation += speed * delta;
@@ -164,8 +146,11 @@ isDragging = true;
 autoRotate = false;
 lastX = getX(e);
 
-/* ← ここが重要 */
-dragBaseRotation = rotation;
+/* ★ 現在角度から「最も近い正面」を基準に固定 */
+const a = ((rotation % 360) + 360) % 360;
+manualCenter = a < 90 || a > 270
+? rotation - a // 表（0度）
+: rotation - (a - 180); // 裏（180度）
 }
 
 function onDrag(e) {
@@ -174,18 +159,10 @@ if (!isDragging) return;
 const x = getX(e);
 const dx = x - lastX;
 
-const deltaAngle = dx * 0.6;
+let offset = dx * 0.6;
+offset = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, offset));
 
-/* 基準角度からの相対移動 */
-let offset = rotation + deltaAngle - dragBaseRotation;
-
-/* 相対量だけ制限 */
-offset = Math.max(
--DRAG_LIMIT,
-Math.min(DRAG_LIMIT, offset)
-);
-
-rotation = dragBaseRotation + offset;
+rotation = manualCenter + offset;
 card.style.transform = `rotateY(${rotation}deg)`;
 updateEdge();
 
@@ -197,12 +174,12 @@ isDragging = false;
 autoRotate = true;
 }
 
-/* マウス */
+/* mouse */
 card.addEventListener('mousedown', startDrag);
 window.addEventListener('mousemove', onDrag);
 window.addEventListener('mouseup', endDrag);
 
-/* タッチ */
+/* touch */
 card.addEventListener('touchstart', startDrag, { passive: true });
 card.addEventListener('touchmove', onDrag, { passive: true });
 card.addEventListener('touchend', endDrag);
