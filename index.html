@@ -98,7 +98,8 @@ let lastX = 0;
 let manualCenter = 0;
 
 const SPEED = 0.1;
-const DRAG_LIMIT = 55; // ← 常にこの幅だけ見える
+const DRAG_LIMIT = 70; // ← 常にこの幅だけ見える
+const DRAG_SENS = 0.35;
 const SIDE_ZONE = 15;
 const BOOST_RATE = 0.35;
 
@@ -159,7 +160,7 @@ if (!isDragging) return;
 const x = getX(e);
 const dx = x - lastX;
 
-let offset = dx * 0.6;
+let offset = dx * DRAG_SENS;
 offset = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, offset));
 
 rotation = manualCenter + offset;
