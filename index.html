@@ -22,7 +22,7 @@ align-items: center;
 
 /* ===== コンテナ ===== */
 .card-container {
-width: 220px;
+width: 260px;
 height: 400px;
 perspective: 1200px;
 }
@@ -34,15 +34,12 @@ height: 100%;
 position: relative;
 transform-style: preserve-3d;
 transform-origin: center center;
-  
 cursor: grab;
 user-select: none;
 touch-action: none;
 
-  overflow: hidden;
-
 /* 浮かせない・ケース感 */
-box-shadow: 0 2px 4px rgba(0,0,0,0.12);
+box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .card:active {
@@ -52,12 +49,7 @@ cursor: grabbing;
 /* ===== 表裏共通 ===== */
 .side {
 position: absolute;
-
-top: -2px;
-left: -2px;
-right: -2px;
-bottom: -2px;
-  
+inset: 0;
 backface-visibility: hidden;
 
 /* 画像を完全密着 */
@@ -116,7 +108,7 @@ let lastX = 0;
 /* ===== 回転速度 =====
 1秒で 360度（かなり速い・止まらない）
 */
-const AUTO_SPEED = 65;
+const AUTO_SPEED = 360;
 
 let lastTime = performance.now();
 
