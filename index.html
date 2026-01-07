@@ -58,6 +58,7 @@ background-repeat: no-repeat;
 
 /* ===== 表面の反射 ===== */
 .front::after {
+opacity: calc(0.85 + var(--shine-edge, 0));
 content: '';
 position: absolute;
 inset: 10%;
@@ -92,6 +93,7 @@ opacity: 0.85;
 
 /* ===== 裏面の反射（弱く・鈍く） ===== */
 .back::after {
+opacity: calc(0.55 + var(--shine-edge, 0) * 0.6);
 content: '';
 position: absolute;
 inset: 12%;
