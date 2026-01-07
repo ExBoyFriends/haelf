@@ -61,8 +61,7 @@ content: '';
 position: absolute;
 top: 0; bottom: 0; left: -2px; /* 少しだけ左に出す */
 width: 4px; /* 厚みの幅 */
-background: rgba(0,0,0,0.05); /* ほんのり暗く */
-transform: rotateY(0deg);
+background: rgba(0,0,0,0.05), rgba(0,0,0,0); /* ほんのり暗く */
 pointer-events: none;
 border-radius: 1px;
 z-index: -1;
@@ -90,7 +89,7 @@ let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
 
-const AUTO_SPEED = 180; // 1秒で180度回転
+const AUTO_SPEED = 80; // 1秒で80度回転
 
 // 自動回転ループ
 let lastTime = performance.now();
