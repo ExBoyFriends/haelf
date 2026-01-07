@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Rotating Card with Smooth Light Flow</title>
+<title>Rotating Card with Correct Front/Back Light</title>
 <style>
 html, body {
 margin: 0;
@@ -116,28 +116,25 @@ const SPEED = 1.6;
 const DRAG_LIMIT = 55;
 const DRAG_SENS = 0.3;
 
-/* 光と明るさを自然な流れで制御 */
+/* 光と明るさを角度に応じて変化 */
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
 
 const rad = rotation * Math.PI / 180;
 
-// ハイライトの横移動で奥行き感
-const shineX = Math.sin(rad) * 30; // -30%〜30%
+// 光の横移動で奥行き感
+const shineX = Math.sin(rad) * 30;
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
 
-// 正面通過が最大明るさ
-const base = 0.75;
-// cos(rad) → 正面が最大明るさ
-// sin(rad) → 左右の光の流れ
-const dynamic = 0.25 * Math.cos(rad) + 0.1 * Math.sin(rad);
+// 表：正面0°が最大明るさ
+const frontBrightness = 0.75 + 0.25 * Math.cos(rad);
 
-const brightness = base + dynamic;
+// 裏：正面180°が最大明るさ
+const backBrightness = 0.75 + 0.25 * Math.cos(rad - Math.PI);
 
-// 表裏とも同じ光の流れ
-front.style.filter = `brightness(${brightness})`;
-back.style.filter = `brightness(${brightness})`;
+front.style.filter = `brightness(${frontBrightness})`;
+back.style.filter = `brightness(${backBrightness})`;
 }
 
 /* 自動回転 */
