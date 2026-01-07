@@ -75,18 +75,23 @@ let autoRotate = true; // 自動回転ON/OFF
 let isDragging = false; // ドラッグ中か
 let lastX = 0; // 前フレームのX座標
 
-const AUTO_SPEED = 0.2; // 自動回転速度（小さいほどゆっくり）
+const AUTO_SPEED = 30; // 1秒で30度回転 → 180度6秒
 
-// 自動回転ループ
-function animate() {
+// 自動回転ループ（フレームレート補正付き）
+let lastTime = performance.now();
+function animate(time) {
+const delta = time - lastTime;
+lastTime = time;
+
 if (autoRotate && !isDragging) {
-rotation += AUTO_SPEED;
+rotation += AUTO_SPEED * (delta / 1000); // deltaはmsなので1000で秒換算
 rotation %= 360;
 card.style.transform = `rotateY(${rotation}deg)`;
 }
+
 requestAnimationFrame(animate);
 }
-animate();
+requestAnimationFrame(animate);
 
 // タッチ・マウス共通処理
 function getX(e) {
