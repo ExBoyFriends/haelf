@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pokepoke Final Card</title>
+<title>Rotating Card with Case</title>
 
 <style>
 html, body {
@@ -11,7 +11,6 @@ margin: 0;
 width: 100%;
 height: 100%;
 background: transparent;
-overflow: hidden;
 }
 
 body {
@@ -20,11 +19,27 @@ justify-content: center;
 align-items: center;
 }
 
-/* ===== コンテナ ===== */
-.card-container {
-width: 200px;
+/* ===== ラッパー（3D用） ===== */
+.wrap {
+position: relative;
+width: 260px;
 height: 400px;
 perspective: 1200px;
+}
+
+/* ===== ケースの縁（厚みの正体） ===== */
+.wrap::before {
+content: '';
+position: absolute;
+inset: 0;
+
+/* ケース感 */
+border: 1px solid rgba(0, 0, 0, 0.18);
+box-shadow:
+0 0 0 1px rgba(255,255,255,0.25) inset;
+
+border-radius: 2px;
+pointer-events: none;
 }
 
 /* ===== カード本体 ===== */
@@ -33,26 +48,14 @@ width: 100%;
 height: 100%;
 position: relative;
 transform-style: preserve-3d;
-transform-origin: center center;
-cursor: grab;
-user-select: none;
-touch-action: none;
-
-/* 浮かせない・ケース感 */
-box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
-.card:active {
-cursor: grabbing;
-}
-
-/* ===== 表裏共通 ===== */
-.side {
+/* ===== 表裏 ===== */
+.face {
 position: absolute;
 inset: 0;
 backface-visibility: hidden;
 
-/* 画像を完全密着 */
 background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
@@ -68,32 +71,15 @@ background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main
 background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/top.png");
 transform: rotateY(180deg);
 }
-
-/* ===== ケースの“ほんの少し”厚み ===== */
-.card::before {
-content: '';
-position: absolute;
-top: 0;
-bottom: 0;
-left: -2px;
-width: 4px;
-
-/* 薄い黒系（主張しない） */
-background: rgba(0, 0, 0, 0.12);
-
-border-radius: 1px;
-pointer-events: none;
-z-index: -1;
-}
 </style>
 </head>
 
 <body>
 
-<div class="card-container">
+<div class="wrap">
 <div class="card" id="card">
-<div class="side front"></div>
-<div class="side back"></div>
+<div class="face front"></div>
+<div class="face back"></div>
 </div>
 </div>
 
@@ -101,70 +87,15 @@ z-index: -1;
 const card = document.getElementById('card');
 
 let rotation = 0;
-let autoRotate = true;
-let isDragging = false;
-let lastX = 0;
+const SPEED = 0.4; // 回転速度（ここだけ好みで調整）
 
-/* ===== 回転速度 =====
-1秒で 75度
-*/
-const AUTO_SPEED = 75;
-
-let lastTime = performance.now();
-
-/* ===== 自動回転 ===== */
-function animate(time) {
-const delta = time - lastTime;
-lastTime = time;
-
-if (autoRotate && !isDragging) {
-rotation += AUTO_SPEED * (delta / 1000);
-rotation %= 360;
+function animate() {
+rotation += SPEED;
 card.style.transform = `rotateY(${rotation}deg)`;
-}
-
 requestAnimationFrame(animate);
 }
-requestAnimationFrame(animate);
 
-/* ===== 入力処理 ===== */
-function getX(e) {
-return e.touches ? e.touches[0].clientX : e.clientX;
-}
-
-function startDrag(e) {
-isDragging = true;
-autoRotate = false;
-lastX = getX(e);
-}
-
-function onDrag(e) {
-if (!isDragging) return;
-
-const currentX = getX(e);
-const deltaX = currentX - lastX;
-
-rotation += deltaX * 0.6;
-rotation %= 360;
-
-card.style.transform = `rotateY(${rotation}deg)`;
-lastX = currentX;
-}
-
-function endDrag() {
-isDragging = false;
-autoRotate = true;
-}
-
-/* マウス */
-card.addEventListener('mousedown', startDrag);
-window.addEventListener('mousemove', onDrag);
-window.addEventListener('mouseup', endDrag);
-
-/* タッチ */
-card.addEventListener('touchstart', startDrag);
-card.addEventListener('touchmove', onDrag);
-card.addEventListener('touchend', endDrag);
+animate();
 </script>
 
 </body>
