@@ -7,6 +7,7 @@
 <style>
 html, body {
 margin: 0;
+padding: 0;
 width: 100%;
 height: 100%;
 overflow: hidden;
@@ -24,9 +25,9 @@ touch-action: pan-x pan-y;
 .wrap {
 width: 90vw;
 max-width: 260px;
-height: calc(90vw * 400 / 260);
-maxhigh: 400px;
+aspct-ratio: 260/400;
 perspective: 1200px;
+overfow: hidden;
 }
 
 /* カード */
@@ -47,7 +48,6 @@ backface-visibility: hidden;
 background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
-overflow: hidden;
 }
 
 /* ===== 表面の反射 ===== */
