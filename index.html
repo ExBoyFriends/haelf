@@ -27,17 +27,13 @@ height: 400px;
 perspective: 1200px;
 }
 
-/* ===== ケースの縁（厚みの正体） ===== */
+/* ===== ケースの縁 ===== */
 .wrap::before {
 content: '';
 position: absolute;
 inset: 0;
-
-/* ケース感 */
 border: 1px solid rgba(0, 0, 0, 0.18);
-box-shadow:
-0 0 0 1px rgba(255,255,255,0.25) inset;
-
+box-shadow: 0 0 0 1px rgba(255,255,255,0.25) inset;
 border-radius: 2px;
 pointer-events: none;
 }
@@ -48,6 +44,35 @@ width: 100%;
 height: 100%;
 position: relative;
 transform-style: preserve-3d;
+cursor: grab;
+user-select: none;
+touch-action: none;
+}
+
+.card:active {
+cursor: grabbing;
+}
+
+/* ===== 疑似的な側面厚み（カードに追従） ===== */
+.card::before,
+.card::after {
+content: '';
+position: absolute;
+top: 2px;
+bottom: 2px;
+width: 4px;
+background: rgba(0,0,0,0.18);
+pointer-events: none;
+}
+
+/* 左エッジ */
+.card::before {
+left: 0;
+}
+
+/* 右エッジ */
+.card::after {
+right: 0;
 }
 
 /* ===== 表裏 ===== */
@@ -55,7 +80,6 @@ transform-style: preserve-3d;
 position: absolute;
 inset: 0;
 backface-visibility: hidden;
-
 background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
@@ -87,15 +111,63 @@ transform: rotateY(180deg);
 const card = document.getElementById('card');
 
 let rotation = 0;
-const SPEED = 0.4; // 回転速度（ここだけ好みで調整）
+let autoRotate = true;
+let isDragging = false;
+let lastX = 0;
 
-function animate() {
-rotation += SPEED;
+const SPEED = 0.4; // ← 自動回転速度（そのまま）
+let lastTime = performance.now();
+
+function animate(time) {
+const delta = time - lastTime;
+lastTime = time;
+
+if (autoRotate && !isDragging) {
+rotation += SPEED * delta;
 card.style.transform = `rotateY(${rotation}deg)`;
-requestAnimationFrame(animate);
 }
 
-animate();
+requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+/* ===== 操作 ===== */
+function getX(e) {
+return e.touches ? e.touches[0].clientX : e.clientX;
+}
+
+function startDrag(e) {
+isDragging = true;
+autoRotate = false;
+lastX = getX(e);
+}
+
+function onDrag(e) {
+if (!isDragging) return;
+
+const x = getX(e);
+const dx = x - lastX;
+
+rotation += dx * 0.6;
+card.style.transform = `rotateY(${rotation}deg)`;
+
+lastX = x;
+}
+
+function endDrag() {
+isDragging = false;
+autoRotate = true;
+}
+
+/* マウス */
+card.addEventListener('mousedown', startDrag);
+window.addEventListener('mousemove', onDrag);
+window.addEventListener('mouseup', endDrag);
+
+/* タッチ */
+card.addEventListener('touchstart', startDrag, { passive: true });
+card.addEventListener('touchmove', onDrag, { passive: true });
+card.addEventListener('touchend', endDrag);
 </script>
 
 </body>
