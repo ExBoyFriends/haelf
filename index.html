@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rotating Card with Case</title>
+<title>Card with Image-based Thickness</title>
 
 <style>
 html, body {
@@ -19,35 +19,23 @@ justify-content: center;
 align-items: center;
 }
 
-/* ===== ラッパー（3D用） ===== */
-.wrap {
-position: relative;
-width: 260px;
-height: 400px;
+.scene {
 perspective: 1200px;
 }
 
-/* ===== ケースの縁（厚みの正体） ===== */
-.wrap::before {
-content: '';
-position: absolute;
-inset: 0;
-
-/* ケース感 */
-border: 1px solid rgba(0, 0, 0, 0.18);
-box-shadow:
-0 0 0 1px rgba(255,255,255,0.25) inset;
-
-border-radius: 2px;
-pointer-events: none;
-}
-
-/* ===== カード本体 ===== */
+/* ===== カード ===== */
 .card {
-width: 100%;
-height: 100%;
+width: 260px;
+height: 400px;
 position: relative;
 transform-style: preserve-3d;
+cursor: grab;
+user-select: none;
+touch-action: none;
+}
+
+.card:active {
+cursor: grabbing;
 }
 
 /* ===== 表裏 ===== */
@@ -55,10 +43,8 @@ transform-style: preserve-3d;
 position: absolute;
 inset: 0;
 backface-visibility: hidden;
-
 background-size: cover;
 background-position: center;
-background-repeat: no-repeat;
 }
 
 /* 表 */
@@ -71,12 +57,35 @@ background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main
 background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/top.png");
 transform: rotateY(180deg);
 }
+
+/* ===== 疑似的な「厚み」 ===== */
+.card::before,
+.card::after {
+content: '';
+position: absolute;
+top: 1px;
+bottom: 1px;
+width: 6px; /* ← 厚み量 */
+background: rgba(0,0,0,0.18);
+filter: blur(0.2px);
+pointer-events: none;
+}
+
+/* 左側エッジ */
+.card::before {
+left: -3px;
+}
+
+/* 右側エッジ */
+.card::after {
+right: -3px;
+}
 </style>
 </head>
 
 <body>
 
-<div class="wrap">
+<div class="scene">
 <div class="card" id="card">
 <div class="face front"></div>
 <div class="face back"></div>
@@ -87,15 +96,65 @@ transform: rotateY(180deg);
 const card = document.getElementById('card');
 
 let rotation = 0;
-const SPEED = 0.4; // 回転速度（ここだけ好みで調整）
+let autoRotate = true;
+let isDragging = false;
+let lastX = 0;
 
-function animate() {
-rotation += SPEED;
+const AUTO_SPEED = 420; // かなり速め
+let lastTime = performance.now();
+
+/* 自動回転 */
+function animate(time) {
+const delta = time - lastTime;
+lastTime = time;
+
+if (autoRotate && !isDragging) {
+rotation += AUTO_SPEED * (delta / 1000);
+rotation %= 360;
 card.style.transform = `rotateY(${rotation}deg)`;
-requestAnimationFrame(animate);
 }
 
-animate();
+requestAnimationFrame(animate);
+}
+requestAnimationFrame(animate);
+
+/* 入力 */
+function getX(e) {
+return e.touches ? e.touches[0].clientX : e.clientX;
+}
+
+function startDrag(e) {
+isDragging = true;
+autoRotate = false;
+lastX = getX(e);
+}
+
+function onDrag(e) {
+if (!isDragging) return;
+const x = getX(e);
+const dx = x - lastX;
+
+rotation += dx * 0.6;
+rotation %= 360;
+card.style.transform = `rotateY(${rotation}deg)`;
+
+lastX = x;
+}
+
+function endDrag() {
+isDragging = false;
+autoRotate = true;
+}
+
+/* マウス */
+card.addEventListener('mousedown', startDrag);
+window.addEventListener('mousemove', onDrag);
+window.addEventListener('mouseup', endDrag);
+
+/* タッチ */
+card.addEventListener('touchstart', startDrag, { passive: true });
+card.addEventListener('touchmove', onDrag, { passive: true });
+card.addEventListener('touchend', endDrag);
 </script>
 
 </body>
