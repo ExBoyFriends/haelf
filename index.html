@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Rotating Card with Case</title>
+<title>Rotating Card Final</title>
 
 <style>
 html, body {
@@ -19,7 +19,7 @@ justify-content: center;
 align-items: center;
 }
 
-/* ===== ラッパー（3D用） ===== */
+/* ===== ラッパー（3D空間） ===== */
 .wrap {
 position: relative;
 width: 260px;
@@ -27,18 +27,18 @@ height: 400px;
 perspective: 1200px;
 }
 
-/* ===== ケースの縁 ===== */
+/* ケース縁（回転しない） */
 .wrap::before {
 content: '';
 position: absolute;
 inset: 0;
-border: 1px solid rgba(0, 0, 0, 0.18);
+border: 1px solid rgba(0,0,0,0.18);
 box-shadow: 0 0 0 1px rgba(255,255,255,0.25) inset;
 border-radius: 2px;
 pointer-events: none;
 }
 
-/* ===== カード本体 ===== */
+/* ===== カード ===== */
 .card {
 width: 100%;
 height: 100%;
@@ -53,27 +53,20 @@ touch-action: none;
 cursor: grabbing;
 }
 
-/* ===== 疑似的な側面厚み（カードに追従） ===== */
+/* 疑似的な厚み（回転に追従） */
 .card::before,
 .card::after {
 content: '';
 position: absolute;
 top: 2px;
 bottom: 2px;
-width: 4px;
-background: rgba(0,0,0,0.18);
+width: var(--edge-w, 4px);
+background: rgba(0,0,0,var(--edge-a,0.18));
 pointer-events: none;
 }
 
-/* 左エッジ */
-.card::before {
-left: 0;
-}
-
-/* 右エッジ */
-.card::after {
-right: 0;
-}
+.card::before { left: 0; }
+.card::after { right: 0; }
 
 /* ===== 表裏 ===== */
 .face {
@@ -85,12 +78,10 @@ background-position: center;
 background-repeat: no-repeat;
 }
 
-/* 表 */
 .front {
 background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/king.of.spades.png");
 }
 
-/* 裏 */
 .back {
 background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/top.png");
 transform: rotateY(180deg);
@@ -110,28 +101,59 @@ transform: rotateY(180deg);
 <script>
 const card = document.getElementById('card');
 
+/* ===== 状態 ===== */
 let rotation = 0;
 let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
 
-const SPEED = 0.1; // ← 自動回転速度（そのまま）
+/* ===== パラメータ ===== */
+const SPEED = 0.1; // 基本回転速度（deg / ms）
+const DRAG_LIMIT = 65; // 手動操作で行ける最大角度
+const SIDE_ZONE = 15; // 真横前後の加速ゾーン角度
+const BOOST_RATE = 0.35; // 加速率
+
 let lastTime = performance.now();
 
+/* ===== 厚み演出 ===== */
+function updateEdge() {
+const a = ((rotation % 360) + 360) % 360;
+const d = Math.abs(90 - (a % 180));
+const t = Math.max(0, 1 - d / 40);
+
+const w = 2 + t * 6;
+const alpha = 0.12 + t * 0.35;
+
+card.style.setProperty('--edge-w', `${w}px`);
+card.style.setProperty('--edge-a', alpha);
+}
+
+/* ===== 自動回転 ===== */
 function animate(time) {
 const delta = time - lastTime;
 lastTime = time;
 
 if (autoRotate && !isDragging) {
-rotation += SPEED * delta;
+let speed = SPEED;
+
+const angle = ((rotation % 360) + 360) % 360;
+const near90 = Math.abs(angle - 90) < SIDE_ZONE;
+const near270 = Math.abs(angle - 270) < SIDE_ZONE;
+
+if (near90 || near270) {
+speed *= (1 + BOOST_RATE);
+}
+
+rotation += speed * delta;
 card.style.transform = `rotateY(${rotation}deg)`;
+updateEdge();
 }
 
 requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
 
-/* ===== 操作 ===== */
+/* ===== 入力処理 ===== */
 function getX(e) {
 return e.touches ? e.touches[0].clientX : e.clientX;
 }
@@ -147,9 +169,17 @@ if (!isDragging) return;
 
 const x = getX(e);
 const dx = x - lastX;
+let next = rotation + dx * 0.6;
 
-rotation += dx * 0.6;
+let norm = ((next % 360) + 360) % 360;
+if (norm > 180) norm -= 360;
+
+if (norm > DRAG_LIMIT) norm = DRAG_LIMIT;
+if (norm < -DRAG_LIMIT) norm = -DRAG_LIMIT;
+
+rotation = norm;
 card.style.transform = `rotateY(${rotation}deg)`;
+updateEdge();
 
 lastX = x;
 }
