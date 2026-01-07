@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pokepoke Style Card</title>
+<style>
+body {
+margin: 0;
+height: 100vh;
+display: flex;
+justify-content: center;
+align-items: center;
+background: transparent;
+}
+
+.card-container {
+perspective: 1200px;
+width: 260px;
+height: 400px;
+}
+
+.card {
+width: 100%;
+height: 100%;
+position: relative;
+transform-style: preserve-3d;
+transform-origin: center center;
+cursor: grab;
+user-select: none;
+touch-action: none;
+}
+
+.card:active {
+cursor: grabbing;
+}
+
+.side {
+position: absolute;
+width: 100%;
+height: 100%;
+backface-visibility: hidden;
+}
+
+.side img {
+width: 100%;
+height: 100%;
+object-fit: contain;
+display: block;
+}
+
+.back {
+transform: rotateY(180deg);
+}
+</style>
+</head>
+<body>
+
+<div class="card-container">
+<div class="card" id="card">
+<div class="side front">
+<img src="ここに表画像URL" alt="front">
+</div>
+<div class="side back">
+<img src="ここに裏画像URL" alt="back">
+</div>
+</div>
+</div>
+
+<script>
+const card = document.getElementById('card');
+
+let rotation = 0; // 現在の回転角度
+let autoRotate = true; // 自動回転ON/OFF
+let isDragging = false; // ドラッグ中か
+let lastX = 0; // 前フレームのX座標
+
+const AUTO_SPEED = 0.2; // 自動回転速度（小さいほどゆっくり）
+
+// 自動回転ループ
+function animate() {
+if (autoRotate && !isDragging) {
+rotation += AUTO_SPEED;
+rotation %= 360;
+card.style.transform = `rotateY(${rotation}deg)`;
+}
+requestAnimationFrame(animate);
+}
+animate();
+
+// タッチ・マウス共通処理
+function getX(e) {
+return e.touches ? e.touches[0].clientX : e.clientX;
+}
+
+// 押し始め
+function startDrag(e) {
+isDragging = true;
+autoRotate = false; // 押したら自動回転停止
+lastX = getX(e);
+}
+
+// 移動中
+function onDrag(e) {
+if (!isDragging) return;
+
+const currentX = getX(e);
+const deltaX = currentX - lastX;
+rotation += deltaX * 0.6; // 指の移動量を回転に変換
+rotation %= 360;
+
+card.style.transform = `rotateY(${rotation}deg)`;
+lastX = currentX;
+}
+
+// 離した
+function endDrag() {
+isDragging = false;
+autoRotate = true; // 指を離したら自動回転再開
+}
+
+// マウスイベント
+card.addEventListener('mousedown', startDrag);
+window.addEventListener('mousemove', onDrag);
+window.addEventListener('mouseup', endDrag);
+
+// タッチイベント
+card.addEventListener('touchstart', startDrag);
+card.addEventListener('touchmove', onDrag);
+card.addEventListener('touchend', endDrag);
+</script>
+
+</body>
+</html>
