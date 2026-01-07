@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Realistic Rotating Card</title>
+<title>Natural Rotating Card with Dynamic Light</title>
 <style>
 html, body {
 margin: 0;
@@ -50,7 +50,7 @@ background-position: center;
 background-repeat: no-repeat;
 overflow: hidden;
 border-radius: 12px;
-transition: filter 0.1s;
+transition: filter 0.05s; /* 明るさ変化を滑らかに */
 }
 
 /* 表面の反射 */
@@ -116,19 +116,22 @@ const SPEED = 1.6;
 const DRAG_LIMIT = 55;
 const DRAG_SENS = 0.3;
 
-/* 光と明るさを角度に応じて変える */
+/* 光と自然な影を角度に応じて変える */
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
 
 const rad = rotation * Math.PI / 180;
 
-// 光の反射の横位置
+// ハイライトの横移動
 const shineX = Math.sin(rad) * 30; // -30%〜30%
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
 
-// 左右の明るさで奥行き感を強調
-const brightness = 0.85 + 0.15 * Math.sin(rad); // 左手前・右奥
+// 奥行き感を光で表現（右奥は暗く、左手前は明るく）
+// sin(rad) > 0 → 右が奥、左が手前
+const baseBrightness = 0.8;
+const dynamic = Math.sin(rad) * 0.2; // -0.2〜0.2
+const brightness = baseBrightness + dynamic;
 front.style.filter = `brightness(${brightness})`;
 back.style.filter = `brightness(${brightness})`;
 }
