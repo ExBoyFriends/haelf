@@ -9,6 +9,7 @@ html, body {
 margin: 0;
 width: 100%;
 height: 100%;
+overflow: hidden;
 background: #000;
 }
 
@@ -16,12 +17,15 @@ body {
 display: flex;
 justify-content: center;
 align-items: center;
+touch-action: pan-x pan-y;
 }
 
 /* ラッパー */
 .wrap {
-width: 260px;
-height: 400px;
+width: 90vw;
+max-width: 260px;
+height: calc(90vw * 400 / 260);
+maxhigh: 400px;
 perspective: 1200px;
 }
 
