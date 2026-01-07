@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Responsive Rotating Card</title>
+<title>Flat Rotating Card</title>
 <style>
 html, body {
 margin: 0;
@@ -23,11 +23,11 @@ touch-action: pan-x pan-y;
 
 /* ===== ラッパー ===== */
 .wrap {
-width: 90vw; /* 横幅に合わせる */
-max-width: 260px; /* 元カード上限サイズ */
-aspect-ratio: 260 / 400; /* 縦横比維持 */
-height: auto; /* 高さは自動 */
-perspective: 1200px;
+width: 90vw;
+max-width: 260px;
+aspect-ratio: 260 / 400;
+height: auto;
+/* 完全平面にするので perspective はなし */
 }
 
 /* ===== カード ===== */
@@ -38,6 +38,8 @@ position: relative;
 transform-style: preserve-3d;
 user-select: none;
 touch-action: none;
+border-radius: 12px;
+/* 奥行き感をなくすので translateZ は使用しない */
 }
 
 /* ===== 表裏共通 ===== */
@@ -49,6 +51,7 @@ background-size: cover;
 background-position: center;
 background-repeat: no-repeat;
 overflow: hidden;
+border-radius: 12px;
 }
 
 /* ===== 表面の反射 ===== */
@@ -58,12 +61,12 @@ position: absolute;
 inset: 12%;
 pointer-events: none;
 background:
-linear-gradient(110deg, rgba(255,255,255,0) 40%, rgba(255,255,255,0.10) 46%, rgba(255,255,255,0.22) 50%, rgba(255,255,255,0.10) 54%, rgba(255,255,255,0) 60%),
-linear-gradient(105deg, rgba(255,255,255,0) 42%, rgba(255,255,255,0.06) 48%, rgba(255,255,255,0.14) 52%, rgba(255,255,255,0.06) 56%, rgba(255,255,255,0) 62%);
-filter: blur(6px);
-transform: translateX(var(--shine-x, 0%)) scaleX(var(--shine-s, 0.6));
+linear-gradient(110deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+filter: blur(5px);
+transform: translateX(0%) scaleX(1);
 mix-blend-mode: screen;
-opacity: calc(0.75 + var(--shine-edge, 0));
+opacity: 0.5;
+border-radius: 12px;
 }
 
 /* ===== 裏面の反射 ===== */
@@ -73,11 +76,12 @@ position: absolute;
 inset: 14%;
 pointer-events: none;
 background:
-linear-gradient(110deg, rgba(255,255,255,0) 42%, rgba(255,255,255,0.08) 48%, rgba(255,255,255,0.16) 52%, rgba(255,255,255,0.08) 56%, rgba(255,255,255,0) 62%);
-filter: blur(8px);
-transform: translateX(var(--shine-x, 0%)) scaleX(calc(var(--shine-s, 0.6) * 1.05));
+linear-gradient(110deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
+filter: blur(6px);
+transform: translateX(0%) scaleX(1);
 mix-blend-mode: screen;
 opacity: 0.5;
+border-radius: 12px;
 }
 
 /* 表裏画像 */
@@ -115,38 +119,20 @@ const SPEED = 1.6;
 const DRAG_LIMIT = 55;
 const DRAG_SENS = 0.3;
 
-/* ===== 光と変形適用 ===== */
+/* ===== 光と変形適用（台形感ゼロ） ===== */
 function applyTransform(){
-const a = ((rotation % 180) + 180) % 180;
-const edge = Math.max(0, 1 - Math.abs(a-90)/25);
-
-// 真横でも角が隠れないよう控えめZ
-const z = edge * 3;
-card.style.transform = `translateZ(${z}px) rotateY(${rotation}deg)`;
-
-// 光
-const d = Math.abs(a-90);
-const t = Math.max(0, 1 - d/120);
-const x = -18 + t*36;
-const s = 0.55 + t*0.45;
-const edgeBoost = Math.pow(edge,2) * 0.35;
-
-front.style.setProperty('--shine-x', `${x}%`);
-front.style.setProperty('--shine-s', s.toFixed(3));
-front.style.setProperty('--shine-edge', edgeBoost.toFixed(3));
-
-back.style.setProperty('--shine-x', `${x}%`);
-back.style.setProperty('--shine-s', s.toFixed(3));
-back.style.setProperty('--shine-edge', (edgeBoost*0.6).toFixed(3));
+card.style.transform = `rotateY(${rotation}deg)`;
+// 光の scaleX は 1 固定、translateX も 0
+front.style.setProperty('--shine-x', `0%`);
+front.style.setProperty('--shine-s', 1);
+back.style.setProperty('--shine-x', `0%`);
+back.style.setProperty('--shine-s', 1);
 }
 
 /* ===== 自動回転 ===== */
 function animate(){
 if(autoRotate && !isDragging){
-const a = ((rotation % 180) + 180) % 180;
-const preEdge = Math.max(0, 1 - Math.abs(a-75)/10);
-const accel = Math.pow(preEdge,3)*0.6; // 控えめ加速
-rotation += SPEED + accel;
+rotation += SPEED;
 }
 applyTransform();
 requestAnimationFrame(animate);
