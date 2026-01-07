@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Final Card Rotation</title>
+<title>Rotating Card with Case</title>
 
 <style>
 html, body {
@@ -11,24 +11,43 @@ margin: 0;
 width: 100%;
 height: 100%;
 background: transparent;
+}
+
+body {
 display: flex;
 justify-content: center;
 align-items: center;
 }
 
-/* ===== カード ===== */
-.card {
+/* ===== ラッパー（3D用） ===== */
+.wrap {
+position: relative;
 width: 260px;
 height: 400px;
-position: relative;
-transform-style: preserve-3d;
-cursor: grab;
-user-select: none;
-touch-action: none;
+perspective: 1200px;
 }
 
-.card:active {
-cursor: grabbing;
+/* ===== ケースの縁（厚みの正体） ===== */
+.wrap::before {
+content: '';
+position: absolute;
+inset: 0;
+
+/* ケース感 */
+border: 1px solid rgba(0, 0, 0, 0.18);
+box-shadow:
+0 0 0 1px rgba(255,255,255,0.25) inset;
+
+border-radius: 2px;
+pointer-events: none;
+}
+
+/* ===== カード本体 ===== */
+.card {
+width: 100%;
+height: 100%;
+position: relative;
+transform-style: preserve-3d;
 }
 
 /* ===== 表裏 ===== */
@@ -36,116 +55,47 @@ cursor: grabbing;
 position: absolute;
 inset: 0;
 backface-visibility: hidden;
+
 background-size: cover;
 background-position: center;
+background-repeat: no-repeat;
 }
 
 /* 表 */
 .front {
-background-image: url(" https://raw.githubusercontent.com/ExBoyFriends/haelf/main/king.of.spades.png  ");
+background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/king.of.spades.png");
 }
 
 /* 裏 */
 .back {
-background-image: url(" https://raw.githubusercontent.com/ExBoyFriends/haelf/main/top.png  ");
+background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/top.png");
 transform: rotateY(180deg);
-}
-
-/* ===== ケース厚み（内側描画） ===== */
-.card::before,
-.card::after {
-content: '';
-position: absolute;
-top: 2px;
-bottom: 2px;
-width: 5px;
-background: rgba(0,0,0,0.18);
-pointer-events: none;
-}
-
-/* 左エッジ */
-.card::before {
-left: 0;
-}
-
-/* 右エッジ */
-.card::after {
-right: 0;
 }
 </style>
 </head>
 
 <body>
 
+<div class="wrap">
 <div class="card" id="card">
 <div class="face front"></div>
 <div class="face back"></div>
+</div>
 </div>
 
 <script>
 const card = document.getElementById('card');
 
 let rotation = 0;
-let autoRotate = true;
-let isDragging = false;
-let lastX = 0;
+const SPEED = 0.4; // 回転速度（ここだけ好みで調整）
 
-/* 🔥 速度はここだけ */
-const AUTO_SPEED = 170; // 1秒 ≒ 480deg
-let lastTime = performance.now();
-
-/* 自動回転 */
-function animate(time) {
-const delta = time - lastTime;
-lastTime = time;
-
-if (autoRotate && !isDragging) {
-rotation += AUTO_SPEED * (delta / 1000);
-rotation %= 360;
+function animate() {
+rotation += SPEED;
 card.style.transform = `rotateY(${rotation}deg)`;
-}
-
 requestAnimationFrame(animate);
 }
-requestAnimationFrame(animate);
 
-/* 入力 */
-function getX(e) {
-return e.touches ? e.touches[0].clientX : e.clientX;
-}
-
-function startDrag(e) {
-isDragging = true;
-autoRotate = false;
-lastX = getX(e);
-}
-
-function onDrag(e) {
-if (!isDragging) return;
-const x = getX(e);
-const dx = x - lastX;
-
-rotation += dx * 0.6;
-rotation %= 360;
-card.style.transform = `rotateY(${rotation}deg)`;
-
-lastX = x;
-}
-
-function endDrag() {
-isDragging = false;
-autoRotate = true;
-}
-
-/* マウス */
-card.addEventListener('mousedown', startDrag);
-window.addEventListener('mousemove', onDrag);
-window.addEventListener('mouseup', endDrag);
-
-/* タッチ */
-card.addEventListener('touchstart', startDrag, { passive: true });
-card.addEventListener('touchmove', onDrag, { passive: true });
-card.addEventListener('touchend', endDrag);
+animate();
 </script>
 
 </body>
