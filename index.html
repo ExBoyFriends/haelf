@@ -164,18 +164,24 @@ requestAnimationFrame(animate);
 
 /* ===== 変形と光 ===== */
 function applyTransform() {
-card.style.transform = `rotateY(${rotation}deg)`;
+const a = ((rotation % 180) + 180) % 180;
+const edge = Math.max(0, 1 - Math.abs(a - 90) / 25);
 
-const a = ((rotation % 360) + 360) % 360;
-const d = Math.abs(a <= 180 ? a : 360 - a);
+// 真横付近だけ Z に少し出る
+const z = edge * 14;
 
-// 光は正面〜斜めまで、真横には行かない
+card.style.transform = `
+translateZ(${z}px)
+rotateY(${rotation}deg)
+`;
+
+/* 光 */
+const d = Math.abs(a - 90);
 const t = Math.max(0, 1 - d / 120);
 
 const x = -18 + t * 36;
 const s = 0.55 + t * 0.45;
-
-const edgeBoost = Math.max(0, 1 - Math.abs(d - 75) / 18);
+const edgeBoost = Math.pow(edge, 2) * 0.35;
 
 front.style.setProperty('--shine-x', `${x}%`);
 front.style.setProperty('--shine-s', s.toFixed(3));
@@ -185,7 +191,6 @@ back.style.setProperty('--shine-x', `${x}%`);
 back.style.setProperty('--shine-s', s.toFixed(3));
 back.style.setProperty('--shine-edge', (edgeBoost * 0.6).toFixed(3));
 }
-
 /* ===== 入力 ===== */
 function getX(e) {
 return e.touches ? e.touches[0].clientX : e.clientX;
