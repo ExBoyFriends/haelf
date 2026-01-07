@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pokepoke Fast Rotate Card</title>
+<title>Pokepoke 3D Card</title>
 <style>
 body {
 margin: 0;
@@ -29,6 +29,18 @@ transform-origin: center center;
 cursor: grab;
 user-select: none;
 touch-action: none;
+/* 厚み感の影 */
+box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+}
+
+/* 擬似側面 */
+.card-side-shadow {
+position: absolute;
+top: 0; bottom: 0; left: 0; right: 0;
+background: linear-gradient(to right, rgba(0,0,0,0.2), rgba(0,0,0,0));
+transform: rotateY(90deg);
+transform-origin: left center;
+pointer-events: none; /* カード操作を邪魔しない */
 }
 
 .card:active {
@@ -59,33 +71,35 @@ transform: rotateY(180deg);
 <div class="card-container">
 <div class="card" id="card">
 <div class="side front">
-<img src="https://raw.githubusercontent.com/ExBoyFriends/haelf/main/king.of.spades.png" alt="front">
+<img　src="https://raw.githubusercontent.com/ExBoyFriends/haelf/main/king.of.spades.png" alt="front">
 </div>
 <div class="side back">
 <img src="https://raw.githubusercontent.com/ExBoyFriends/haelf/main/top.png" alt="back">
 </div>
+<!-- 擬似側面 -->
+<div class="card-side-shadow"></div>
 </div>
 </div>
 
 <script>
 const card = document.getElementById('card');
 
-let rotation = 0; // 現在の回転角度
-let autoRotate = true; // 自動回転ON/OFF
-let isDragging = false; // ドラッグ中か
-let lastX = 0; // 前フレームのX座標
+let rotation = 0;
+let autoRotate = true;
+let isDragging = false;
+let lastX = 0;
 
-const AUTO_SPEED = 36; // 自動回転速度（1秒で36度回転）
+const AUTO_SPEED = 180; // 1秒で180度回転
 
-// 自動回転ループ（フレームレート補正付き）
+// 自動回転ループ
 let lastTime = performance.now();
 function animate(time) {
 const delta = time - lastTime;
 lastTime = time;
 
 if (autoRotate && !isDragging) {
-rotation += AUTO_SPEED * (delta / 1000); // 秒換算
-rotation %= 360; // 360度ごとにリセット
+rotation += AUTO_SPEED * (delta / 1000);
+rotation %= 360;
 card.style.transform = `rotateY(${rotation}deg)`;
 }
 
@@ -93,35 +107,32 @@ requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
 
-// タッチ・マウス共通処理
+// タッチ・マウス共通
 function getX(e) {
 return e.touches ? e.touches[0].clientX : e.clientX;
 }
 
-// 押し始め
 function startDrag(e) {
 isDragging = true;
-autoRotate = false; // 押したら自動回転停止
+autoRotate = false;
 lastX = getX(e);
 }
 
-// 移動中
 function onDrag(e) {
 if (!isDragging) return;
 
 const currentX = getX(e);
 const deltaX = currentX - lastX;
-rotation += deltaX * 0.6; // 指の移動量を回転に変換
+rotation += deltaX * 0.6;
 rotation %= 360;
 
 card.style.transform = `rotateY(${rotation}deg)`;
 lastX = currentX;
 }
 
-// 離した
 function endDrag() {
 isDragging = false;
-autoRotate = true; // 指を離したら自動回転再開
+autoRotate = true;
 }
 
 // マウスイベント
@@ -133,6 +144,10 @@ window.addEventListener('mouseup', endDrag);
 card.addEventListener('touchstart', startDrag);
 card.addEventListener('touchmove', onDrag);
 card.addEventListener('touchend', endDrag);
+</script>
+
+</body>
+</html>
 </script>
 
 </body>
