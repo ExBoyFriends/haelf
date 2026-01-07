@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Rotating Card with Natural Light</title>
+<title>Rotating Card with Correct Front/Back Light</title>
 <style>
 html, body {
 margin: 0;
@@ -26,7 +26,7 @@ touch-action: pan-x pan-y;
 width: 90vw;
 max-width: 260px;
 aspect-ratio: 260 / 400;
-perspective: 1200px; /* 遠近感 */
+perspective: 1200px;
 }
 
 /* カード */
@@ -116,23 +116,25 @@ const SPEED = 1.6;
 const DRAG_LIMIT = 55;
 const DRAG_SENS = 0.3;
 
-/* 光と自然な影を角度に応じて変える */
+/* 光と明るさを角度に応じて変化 */
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
 
 const rad = rotation * Math.PI / 180;
 
-// ハイライトの横移動
-const shineX = Math.sin(rad) * 30; // 左右の立体感
+// 光の横移動で奥行き感
+const shineX = Math.sin(rad) * 30;
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
 
-// 正面が一番明るくなるように明るさを cos で制御
-const baseBrightness = 0.75;
-const dynamic = 0.25 * Math.cos(rad); // cos(0)=1 → 正面明るく
-const brightness = baseBrightness + dynamic; // 0.75〜1.0
-front.style.filter = `brightness(${brightness})`;
-back.style.filter = `brightness(${brightness})`;
+// 表：正面0°が最大明るさ
+const frontBrightness = 0.75 + 0.25 * Math.cos(rad);
+
+// 裏：正面180°が最大明るさ
+const backBrightness = 0.75 + 0.25 * Math.cos(rad - Math.PI);
+
+front.style.filter = `brightness(${frontBrightness})`;
+back.style.filter = `brightness(${backBrightness})`;
 }
 
 /* 自動回転 */
