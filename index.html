@@ -157,18 +157,18 @@ const DRAG_SENS = 0.35;
 let lastTime = performance.now();
 
 /* 自動回転 */
-function animate(time) {
-const delta = time - lastTime;
-lastTime = time;
+function animate() {
 
-if (autoRotate && !isDragging) {
-rotation += SPEED * delta;
-applyTransform();
-}
+// 真横直前だけ加速
+const angle = Math.abs(((rotation % 180) + 180) % 180 - 90);
+const approach = Math.max(0, 1 - angle / 25);
+const accel = Math.pow(approach, 2) * 0.15;
 
+rotation += SPEED * (1 + accel);
+
+card.style.transform = `rotateY(${rotation}deg)`;
 requestAnimationFrame(animate);
 }
-requestAnimationFrame(animate);
 
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
