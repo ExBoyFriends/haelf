@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Natural Rotating Card with Dynamic Light</title>
+<title>Rotating Card with Natural Light</title>
 <style>
 html, body {
 margin: 0;
@@ -26,7 +26,7 @@ touch-action: pan-x pan-y;
 width: 90vw;
 max-width: 260px;
 aspect-ratio: 260 / 400;
-perspective: 1200px; /* 奥行き感 */
+perspective: 1200px; /* 遠近感 */
 }
 
 /* カード */
@@ -50,7 +50,7 @@ background-position: center;
 background-repeat: no-repeat;
 overflow: hidden;
 border-radius: 12px;
-transition: filter 0.05s; /* 明るさ変化を滑らかに */
+transition: filter 0.05s;
 }
 
 /* 表面の反射 */
@@ -123,15 +123,14 @@ card.style.transform = `rotateY(${rotation}deg)`;
 const rad = rotation * Math.PI / 180;
 
 // ハイライトの横移動
-const shineX = Math.sin(rad) * 30; // -30%〜30%
+const shineX = Math.sin(rad) * 30; // 左右の立体感
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
 
-// 奥行き感を光で表現（右奥は暗く、左手前は明るく）
-// sin(rad) > 0 → 右が奥、左が手前
-const baseBrightness = 0.8;
-const dynamic = Math.sin(rad) * 0.2; // -0.2〜0.2
-const brightness = baseBrightness + dynamic;
+// 正面が一番明るくなるように明るさを cos で制御
+const baseBrightness = 0.75;
+const dynamic = 0.25 * Math.cos(rad); // cos(0)=1 → 正面明るく
+const brightness = baseBrightness + dynamic; // 0.75〜1.0
 front.style.filter = `brightness(${brightness})`;
 back.style.filter = `brightness(${brightness})`;
 }
