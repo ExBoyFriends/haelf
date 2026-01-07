@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pokepoke 3D Card</title>
+<title>Pokepoke Subtle 3D Card</title>
 <style>
 body {
 margin: 0;
@@ -29,18 +29,8 @@ transform-origin: center center;
 cursor: grab;
 user-select: none;
 touch-action: none;
-/* 厚み感の影 */
-box-shadow: 0 6px 15px rgba(0,0,0,0.3);
-}
-
-/* 擬似側面 */
-.card-side-shadow {
-position: absolute;
-top: 0; bottom: 0; left: 0; right: 0;
-background: linear-gradient(to right, rgba(0,0,0,0.2), rgba(0,0,0,0));
-transform: rotateY(90deg);
-transform-origin: left center;
-pointer-events: none; /* カード操作を邪魔しない */
+/* 軽い影で立体感 */
+box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .card:active {
@@ -64,6 +54,18 @@ display: block;
 .back {
 transform: rotateY(180deg);
 }
+
+/* 薄い側面の表現 */
+.card::before {
+content: '';
+position: absolute;
+top: 0; bottom: 0; left: -2px; /* 少しだけ左に出す */
+width: 4px; /* 厚みの幅 */
+background: rgba(0,0,0,0.05); /* ほんのり暗く */
+transform: rotateY(0deg);
+pointer-events: none;
+border-radius: 1px;
+}
 </style>
 </head>
 <body>
@@ -76,8 +78,6 @@ transform: rotateY(180deg);
 <div class="side back">
 <img src="https://raw.githubusercontent.com/ExBoyFriends/haelf/main/top.png" alt="back">
 </div>
-<!-- 擬似側面 -->
-<div class="card-side-shadow"></div>
 </div>
 </div>
 
@@ -107,47 +107,35 @@ requestAnimationFrame(animate);
 }
 requestAnimationFrame(animate);
 
-// タッチ・マウス共通
+// ドラッグ操作
 function getX(e) {
 return e.touches ? e.touches[0].clientX : e.clientX;
 }
-
 function startDrag(e) {
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
 }
-
 function onDrag(e) {
 if (!isDragging) return;
-
 const currentX = getX(e);
 const deltaX = currentX - lastX;
 rotation += deltaX * 0.6;
 rotation %= 360;
-
 card.style.transform = `rotateY(${rotation}deg)`;
 lastX = currentX;
 }
-
 function endDrag() {
 isDragging = false;
 autoRotate = true;
 }
 
-// マウスイベント
 card.addEventListener('mousedown', startDrag);
 window.addEventListener('mousemove', onDrag);
 window.addEventListener('mouseup', endDrag);
-
-// タッチイベント
 card.addEventListener('touchstart', startDrag);
 card.addEventListener('touchmove', onDrag);
 card.addEventListener('touchend', endDrag);
-</script>
-
-</body>
-</html>
 </script>
 
 </body>
