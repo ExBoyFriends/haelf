@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Flat Rotating Card</title>
+<title>Natural Rotating Card</title>
 <style>
 html, body {
 margin: 0;
@@ -21,16 +21,16 @@ align-items: center;
 touch-action: pan-x pan-y;
 }
 
-/* ===== ラッパー ===== */
+/* ラッパー */
 .wrap {
 width: 90vw;
 max-width: 260px;
 aspect-ratio: 260 / 400;
 height: auto;
-/* 完全平面にするので perspective はなし */
+perspective: 1200px; /* 遠近感 */
 }
 
-/* ===== カード ===== */
+/* カード */
 .card {
 width: 100%;
 height: 100%;
@@ -38,11 +38,10 @@ position: relative;
 transform-style: preserve-3d;
 user-select: none;
 touch-action: none;
-border-radius: 12px;
-/* 奥行き感をなくすので translateZ は使用しない */
+border-radius: 12px; /* 丸角 */
 }
 
-/* ===== 表裏共通 ===== */
+/* 表裏共通 */
 .face {
 position: absolute;
 inset: 0;
@@ -54,31 +53,29 @@ overflow: hidden;
 border-radius: 12px;
 }
 
-/* ===== 表面の反射 ===== */
+/* 表面の反射 */
 .front::after {
 content: '';
 position: absolute;
-inset: 12%;
+inset: 10%;
 pointer-events: none;
-background:
-linear-gradient(110deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
-filter: blur(5px);
-transform: translateX(0%) scaleX(1);
+background: linear-gradient(110deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 100%);
+filter: blur(4px);
+transform: translateX(var(--shine-x, 0%));
 mix-blend-mode: screen;
-opacity: 0.5;
+opacity: 0.6;
 border-radius: 12px;
 }
 
-/* ===== 裏面の反射 ===== */
+/* 裏面の反射 */
 .back::after {
 content: '';
 position: absolute;
-inset: 14%;
+inset: 10%;
 pointer-events: none;
-background:
-linear-gradient(110deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
-filter: blur(6px);
-transform: translateX(0%) scaleX(1);
+background: linear-gradient(110deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
+filter: blur(4px);
+transform: translateX(var(--shine-x, 0%));
 mix-blend-mode: screen;
 opacity: 0.5;
 border-radius: 12px;
@@ -119,18 +116,19 @@ const SPEED = 1.6;
 const DRAG_LIMIT = 55;
 const DRAG_SENS = 0.3;
 
-/* ===== 光と変形適用（台形感ゼロ） ===== */
-function applyTransform(){
+/* 光の反射を角度に応じて変える */
+function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
-// 光の scaleX は 1 固定、translateX も 0
-front.style.setProperty('--shine-x', `0%`);
-front.style.setProperty('--shine-s', 1);
-back.style.setProperty('--shine-x', `0%`);
-back.style.setProperty('--shine-s', 1);
+
+// 光の位置を回転角度に応じて計算（右側が遠ざかる雰囲気）
+const rad = rotation * Math.PI / 180;
+const shineX = Math.sin(rad) * 30; // -30%〜30%の移動
+front.style.setProperty('--shine-x', `${shineX}%`);
+back.style.setProperty('--shine-x', `${shineX}%`);
 }
 
-/* ===== 自動回転 ===== */
-function animate(){
+/* 自動回転 */
+function animate() {
 if(autoRotate && !isDragging){
 rotation += SPEED;
 }
@@ -139,7 +137,7 @@ requestAnimationFrame(animate);
 }
 animate();
 
-/* ===== ドラッグ操作 ===== */
+/* ドラッグ操作 */
 function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
 function startDrag(e){
