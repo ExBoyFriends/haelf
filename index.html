@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card v5</title>
+<title>3D Rotating Card ±100°</title>
 <style>
 html, body {
 margin: 0;
@@ -78,11 +78,11 @@ let rotation = 0;
 let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
-const DRAG_SENS = 0.3;
-const DRAG_LIMIT = 100; // ±100° 手動操作範囲
+
+const DRAG_LIMIT = 100; // ±100° 手動範囲
 const SIDE_MARGIN = 60; // 側面判定
 let manualCenter = 0;
-let returning = false; // 正面に戻るアニメ中フラグ
+let returning = false;
 
 function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
@@ -120,7 +120,7 @@ const diff = target - rotation;
 if(Math.abs(diff) < 0.5){
 rotation = target;
 applyTransform();
-returning = false; // アニメ終了
+returning = false;
 autoRotate = true; // 自動回転再開
 return;
 }
@@ -135,8 +135,9 @@ step();
 function startDrag(e){
 const angleMod = ((rotation % 360) + 360) % 360;
 
-// 側面判定：正面 ±60°、裏 ±60° 以外
-const nearSide = !((angleMod <= SIDE_MARGIN || angleMod >= 360 - SIDE_MARGIN) || (angleMod >= 180 - SIDE_MARGIN && angleMod <= 180 + SIDE_MARGIN));
+// 側面判定
+const nearSide = !((angleMod <= SIDE_MARGIN || angleMod >= 360 - SIDE_MARGIN) ||
+(angleMod >= 180 - SIDE_MARGIN && angleMod <= 180 + SIDE_MARGIN));
 
 if(nearSide && !returning){
 // 側面クリック → 正面に戻す
@@ -153,14 +154,14 @@ smoothTo(180);
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
-manualCenter = (angleMod < 90 || angleMod > 270) ? 0 : 180;
+manualCenter = (angleMod < 90 || angleMod > 270) ? 0 : 180; // 正面/裏面基準
 }
 }
 
 // ドラッグ中
 function onDrag(e){
 if(!isDragging || returning) return;
-let delta = (getX(e) - lastX) * DRAG_SENS;
+let delta = (getX(e) - lastX) * 0.3;
 delta = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, delta));
 rotation = manualCenter + delta;
 lastX = getX(e);
