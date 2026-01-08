@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card v3</title>
+<title>3D Rotating Card v4</title>
 <style>
 html, body {
 margin: 0;
@@ -79,8 +79,8 @@ let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
 const DRAG_SENS = 0.3;
-const DRAG_LIMIT = 60; // ±60° 手動操作範囲
-const SIDE_THRESHOLD = 120; // 側面判定
+const DRAG_LIMIT = 60; // 正面基準 ±60°
+const SIDE_MARGIN = 60; // 正面±60°以外は側面
 let manualCenter = 0;
 let returning = false; // 正面に戻るアニメーション中フラグ
 
@@ -100,6 +100,7 @@ front.style.filter = `brightness(${brightness})`;
 back.style.filter = `brightness(${brightness})`;
 }
 
+// 自動回転
 function animate() {
 if(autoRotate && !isDragging && !returning){
 rotation += 1.6;
@@ -118,7 +119,7 @@ const diff = target - rotation;
 if(Math.abs(diff) < 0.5){
 rotation = target;
 applyTransform();
-returning = false; // 正面に戻り完了
+returning = false; // アニメーション完了
 return;
 }
 rotation += diff * speed;
@@ -128,13 +129,15 @@ requestAnimationFrame(step);
 step();
 }
 
+// クリック/タッチ開始
 function startDrag(e){
 const angleMod = ((rotation % 360) + 360) % 360;
 
-const nearSide = angleMod < SIDE_THRESHOLD || (angleMod > 180 - SIDE_THRESHOLD && angleMod < 180 + SIDE_THRESHOLD) || angleMod > 360 - SIDE_THRESHOLD;
+// 側面判定：正面 ±60°、裏 ±60° 以外
+const nearSide = !((angleMod <= SIDE_MARGIN || angleMod >= 360 - SIDE_MARGIN) || (angleMod >= 180 - SIDE_MARGIN && angleMod <= 180 + SIDE_MARGIN));
 
 if(nearSide && !returning){
-// 側面クリック → 正面に滑らかに戻す
+// 側面クリック → 自動回転OFF、正面に戻す
 autoRotate = false;
 returning = true;
 isDragging = false;
@@ -144,7 +147,7 @@ smoothTo(0);
 smoothTo(180);
 }
 } else if(!returning){
-// ドラッグ可能
+// 正面・裏正面の範囲はドラッグ可能
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
@@ -152,6 +155,7 @@ manualCenter = (angleMod < 90 || angleMod > 270) ? 0 : 180;
 }
 }
 
+// ドラッグ中
 function onDrag(e){
 if(!isDragging || returning) return;
 let delta = (getX(e) - lastX) * DRAG_SENS;
@@ -161,9 +165,10 @@ lastX = getX(e);
 applyTransform();
 }
 
+// クリック/タッチ終了
 function endDrag(){
 if(returning){
-// 正面に戻ったあとクリック離したら自動回転再開
+// 正面に戻ったあとにクリック離したら自動回転再開
 autoRotate = true;
 returning = false;
 }
