@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card Smooth</title>
+<title>3D Rotating Card Fixed Range</title>
 <style>
 html, body {
 margin: 0;
@@ -74,14 +74,14 @@ const card = document.getElementById('card');
 const front = document.querySelector('.front');
 const back = document.querySelector('.back');
 
-let rotation = 0;
-let autoRotate = true;
-let isDragging = false;
+let rotation = 0; // 現在の回転角度
+let autoRotate = true; // 自動回転中フラグ
+let isDragging = false; // ドラッグ中フラグ
 let lastX = 0;
-const DRAG_SENS = 0.3;
-const DRAG_LIMIT = 60;
-const SIDE_ANGLE = 75;
-let manualCenter = 0;
+const DRAG_SENS = 0.3; // ドラッグ感度
+const DRAG_LIMIT = 60; // 正面基準 ±60°
+const SIDE_THRESHOLD = 120; // 側面とみなす角度範囲
+let manualCenter = 0; // ドラッグ基準角度
 
 function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
@@ -90,11 +90,14 @@ function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
 const rad = rotation * Math.PI / 180;
 const angleMod = ((rotation % 360) + 360) % 360;
-let baseBrightness = 1.0;
+
+// 側面に近いほど暗くなる
 const sideDiff = Math.min(Math.abs(angleMod % 180 - 90)/90, 1);
 const flow = (1 - sideDiff) * 0.15 * Math.sin(rad);
-const brightness = baseBrightness + flow;
+const brightness = 1.0 + flow;
+
 const shineX = Math.sin(rad) * 30;
+
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
 front.style.filter = `brightness(${brightness})`;
@@ -111,9 +114,9 @@ requestAnimationFrame(animate);
 }
 animate();
 
-// 側面クリック時に滑らかに正面に戻す
+// 滑らかに目標角度まで回転
 function smoothTo(target){
-const speed = 0.15; // 数字大きいほど速い
+const speed = 0.15;
 function step(){
 const diff = target - rotation;
 if(Math.abs(diff) < 0.5){
@@ -131,21 +134,26 @@ step();
 // ドラッグ開始
 function startDrag(e){
 const angleMod = ((rotation % 360) + 360) % 360;
-const sideLeft = 180 - SIDE_ANGLE;
-const sideRight = SIDE_ANGLE;
 
-if(angleMod < sideRight || (angleMod > sideLeft && angleMod < 180 + sideRight) || angleMod > 360 - sideRight){
+// 側面を広めに判定
+const nearSide = angleMod < SIDE_THRESHOLD || (angleMod > 180 - SIDE_THRESHOLD && angleMod < 180 + SIDE_THRESHOLD) || angleMod > 360 - SIDE_THRESHOLD;
+
+if(nearSide){
+// 側面近くは自動回転停止して正面に戻す
+autoRotate = false;
+isDragging = false; // 停止はドラッグ不可
+// 近い正面を判定して滑らかに戻す
+if(angleMod >= 0 && angleMod < 180){
+smoothTo(0);
+} else {
+smoothTo(180);
+}
+} else {
+// 正面基準で ±60° の範囲でドラッグ開始
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
-manualCenter = rotation;
-} else {
-autoRotate = false;
-if(angleMod >= sideRight && angleMod <= 180 - sideRight){
-smoothTo(0);
-} else if(angleMod >= 180 + sideRight && angleMod <= 360 - sideRight){
-smoothTo(180);
-}
+manualCenter = Math.round(rotation/360)*360; // 直近の正面基準
 }
 }
 
@@ -161,6 +169,7 @@ applyTransform();
 
 // ドラッグ終了
 function endDrag(){
+if(!isDragging) return;
 isDragging = false;
 autoRotate = true;
 }
