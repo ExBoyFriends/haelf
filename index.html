@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card ±100°</title>
+<title>3D Rotating Card ±100° Full</title>
 <style>
 html, body {
 margin: 0;
@@ -79,7 +79,7 @@ let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
 
-const DRAG_LIMIT = 100; // ±100° 手動範囲
+const DRAG_LIMIT = 100; // ±100° 正面/裏面基準
 const SIDE_MARGIN = 60; // 側面判定
 let manualCenter = 0;
 let returning = false;
@@ -161,7 +161,7 @@ manualCenter = (angleMod < 90 || angleMod > 270) ? 0 : 180; // 正面/裏面基�
 // ドラッグ中
 function onDrag(e){
 if(!isDragging || returning) return;
-let delta = (getX(e) - lastX) * 0.3;
+let delta = (getX(e) - lastX) * 1.0; // 変換率を大きくして ±100° を使いやすく
 delta = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, delta));
 rotation = manualCenter + delta;
 lastX = getX(e);
