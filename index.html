@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card ±100° Full</title>
+<title>3D Rotating Card ±60° with Mirror</title>
 <style>
 html, body {
 margin: 0;
@@ -79,7 +79,7 @@ let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
 
-const DRAG_LIMIT = 65; // ±65° 正面/裏面基準
+const DRAG_LIMIT = 60; // ±60° 手動範囲
 const SIDE_MARGIN = 60; // 側面判定
 let manualCenter = 0;
 let returning = false;
@@ -88,16 +88,27 @@ function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
+
 const rad = rotation * Math.PI / 180;
 const angleMod = ((rotation % 360) + 360) % 360;
 const sideDiff = Math.min(Math.abs(angleMod % 180 - 90)/90, 1);
 const flow = (1 - sideDiff) * 0.15 * Math.sin(rad);
 const brightness = 1.0 + flow;
 const shineX = Math.sin(rad) * 30;
+
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
 front.style.filter = `brightness(${brightness})`;
 back.style.filter = `brightness(${brightness})`;
+
+// 左に傾けたら反転、右に傾けたら元に戻す
+if(rotation - manualCenter < 0){ // 左方向
+front.style.transform = `rotateY(0deg) scaleX(-1)`;
+back.style.transform = `rotateY(180deg) scaleX(-1)`;
+} else { // 右方向
+front.style.transform = `rotateY(0deg) scaleX(1)`;
+back.style.transform = `rotateY(180deg) scaleX(1)`;
+}
 }
 
 // 自動回転
@@ -121,7 +132,7 @@ if(Math.abs(diff) < 0.5){
 rotation = target;
 applyTransform();
 returning = false;
-autoRotate = true; // 自動回転再開
+autoRotate = true;
 return;
 }
 rotation += diff * speed;
@@ -154,14 +165,14 @@ smoothTo(180);
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
-manualCenter = (angleMod < 90 || angleMod > 270) ? 0 : 180; // 正面/裏面基準
+manualCenter = (angleMod < 90 || angleMod > 270) ? 0 : 180;
 }
 }
 
 // ドラッグ中
 function onDrag(e){
 if(!isDragging || returning) return;
-let delta = (getX(e) - lastX) * 1.0; // 変換率を大きくして ±100° を使いやすく
+let delta = (getX(e) - lastX) * 1.0; // 角度換算率
 delta = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, delta));
 rotation = manualCenter + delta;
 lastX = getX(e);
