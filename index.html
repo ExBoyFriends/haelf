@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card Fixed Range</title>
+<title>3D Rotating Card Stable</title>
 <style>
 html, body {
 margin: 0;
@@ -135,25 +135,24 @@ step();
 function startDrag(e){
 const angleMod = ((rotation % 360) + 360) % 360;
 
-// 側面を広めに判定
 const nearSide = angleMod < SIDE_THRESHOLD || (angleMod > 180 - SIDE_THRESHOLD && angleMod < 180 + SIDE_THRESHOLD) || angleMod > 360 - SIDE_THRESHOLD;
 
 if(nearSide){
-// 側面近くは自動回転停止して正面に戻す
+// 側面クリック時は自動回転停止して正面に戻す
 autoRotate = false;
-isDragging = false; // 停止はドラッグ不可
-// 近い正面を判定して滑らかに戻す
+isDragging = false;
 if(angleMod >= 0 && angleMod < 180){
 smoothTo(0);
 } else {
 smoothTo(180);
 }
 } else {
-// 正面基準で ±60° の範囲でドラッグ開始
+// 正面基準 ±60° の範囲でドラッグ開始
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
-manualCenter = Math.round(rotation/360)*360; // 直近の正面基準
+// 現在の角度を最も近い正面（0 or 180）基準に
+manualCenter = (angleMod < 90 || angleMod > 270) ? 0 : 180;
 }
 }
 
