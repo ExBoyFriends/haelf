@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card</title>
+<title>3D Rotating Card Smooth</title>
 <style>
 html, body {
 margin: 0;
@@ -79,28 +79,22 @@ let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
 const DRAG_SENS = 0.3;
-const SIDE_ANGLE = 75; // ±75°付近は側面
+const DRAG_LIMIT = 60;
+const SIDE_ANGLE = 75;
+let manualCenter = 0;
 
 function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
-// 光と明るさの適用
+// 光と明るさ
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
-
 const rad = rotation * Math.PI / 180;
 const angleMod = ((rotation % 360) + 360) % 360;
-
-// 表裏正面では常に明るさ最大
 let baseBrightness = 1.0;
-
-// 側面に近づくほど暗くする微調整
-const sideDiff = Math.min(Math.abs(angleMod % 180 - 90) / 90, 1); // 0=正面, 1=側面
+const sideDiff = Math.min(Math.abs(angleMod % 180 - 90)/90, 1);
 const flow = (1 - sideDiff) * 0.15 * Math.sin(rad);
 const brightness = baseBrightness + flow;
-
-// 光の方向（左右）も統一
 const shineX = Math.sin(rad) * 30;
-
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
 front.style.filter = `brightness(${brightness})`;
@@ -117,24 +111,40 @@ requestAnimationFrame(animate);
 }
 animate();
 
+// 側面クリック時に滑らかに正面に戻す
+function smoothTo(target){
+const speed = 0.15; // 数字大きいほど速い
+function step(){
+const diff = target - rotation;
+if(Math.abs(diff) < 0.5){
+rotation = target;
+applyTransform();
+return;
+}
+rotation += diff * speed;
+applyTransform();
+requestAnimationFrame(step);
+}
+step();
+}
+
 // ドラッグ開始
 function startDrag(e){
 const angleMod = ((rotation % 360) + 360) % 360;
 const sideLeft = 180 - SIDE_ANGLE;
 const sideRight = SIDE_ANGLE;
 
-// 側面付近はドラッグ無効
 if(angleMod < sideRight || (angleMod > sideLeft && angleMod < 180 + sideRight) || angleMod > 360 - sideRight){
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
+manualCenter = rotation;
 } else {
-// 側面クリックは近い正面に移動
 autoRotate = false;
 if(angleMod >= sideRight && angleMod <= 180 - sideRight){
-rotation = 0; // 表
+smoothTo(0);
 } else if(angleMod >= 180 + sideRight && angleMod <= 360 - sideRight){
-rotation = 180; // 裏
+smoothTo(180);
 }
 }
 }
@@ -142,8 +152,9 @@ rotation = 180; // 裏
 // ドラッグ中
 function onDrag(e){
 if(!isDragging) return;
-const delta = (getX(e) - lastX) * DRAG_SENS;
-rotation += delta;
+let delta = (getX(e) - lastX) * DRAG_SENS;
+delta = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, delta));
+rotation = manualCenter + delta;
 lastX = getX(e);
 applyTransform();
 }
@@ -151,7 +162,7 @@ applyTransform();
 // ドラッグ終了
 function endDrag(){
 isDragging = false;
-autoRotate = true; // 離したら自動回転再開
+autoRotate = true;
 }
 
 // マウス
