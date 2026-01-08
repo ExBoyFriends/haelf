@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card ±60° with Mirror</title>
+<title>3D Rotating Card ±60° with Mirror & Hold</title>
 <style>
 html, body {
 margin: 0;
@@ -132,7 +132,8 @@ if(Math.abs(diff) < 0.5){
 rotation = target;
 applyTransform();
 returning = false;
-autoRotate = true;
+// クリック中は手動扱い、離したら自動回転再開
+if(!isDragging) autoRotate = true;
 return;
 }
 rotation += diff * speed;
@@ -151,15 +152,18 @@ const nearSide = !((angleMod <= SIDE_MARGIN || angleMod >= 360 - SIDE_MARGIN) ||
 (angleMod >= 180 - SIDE_MARGIN && angleMod <= 180 + SIDE_MARGIN));
 
 if(nearSide && !returning){
-// 側面クリック → 正面に戻す
+// 側面クリック → 正面に戻すアニメ
 returning = true;
 autoRotate = false;
-isDragging = false;
+// isDragging は押したまま維持
+lastX = getX(e);
+manualCenter = rotation; // この位置を基準にドラッグ可能
 if(angleMod < 180){
 smoothTo(0);
 } else {
 smoothTo(180);
 }
+isDragging = true;
 } else if(!returning){
 // 正面/裏正面はドラッグ可能
 isDragging = true;
@@ -171,7 +175,7 @@ manualCenter = (angleMod < 90 || angleMod > 270) ? 0 : 180;
 
 // ドラッグ中
 function onDrag(e){
-if(!isDragging || returning) return;
+if(!isDragging) return;
 let delta = (getX(e) - lastX) * 1.0; // 角度換算率
 delta = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, delta));
 rotation = manualCenter + delta;
@@ -183,7 +187,7 @@ applyTransform();
 function endDrag(){
 if(isDragging){
 isDragging = false;
-autoRotate = true;
+if(!returning) autoRotate = true; // 離したら自動回転再開
 }
 }
 
