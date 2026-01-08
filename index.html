@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card</title>
+<title>3D Rotating Card with Side Handling</title>
 <style>
 html, body {
 margin: 0;
@@ -13,23 +13,18 @@ height: 100%;
 overflow: hidden;
 background: #000;
 }
-
 body {
 display: flex;
 justify-content: center;
 align-items: center;
 touch-action: pan-x pan-y;
 }
-
-/* ラッパー（コンテナ） */
 .wrap {
 width: 90vw;
 max-width: 260px;
 aspect-ratio: 260 / 400;
-perspective: 1200px; /* 遠近感 */
+perspective: 1200px;
 }
-
-/* カード */
 .card {
 width: 100%;
 height: 100%;
@@ -39,8 +34,6 @@ user-select: none;
 touch-action: none;
 border-radius: 12px;
 }
-
-/* 表裏共通 */
 .face {
 position: absolute;
 inset: 0;
@@ -51,8 +44,6 @@ background-repeat: no-repeat;
 border-radius: 12px;
 transition: filter 0.05s;
 }
-
-/* 反射 */
 .front::after, .back::after {
 content: '';
 position: absolute;
@@ -65,11 +56,8 @@ border-radius: 12px;
 }
 .front::after { background: linear-gradient(110deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 100%); opacity: 0.6; }
 .back::after { background: linear-gradient(110deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 100%); opacity: 0.6; }
-
-/* 表裏画像 */
 .front { background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/king.of.spades.png"); }
 .back { background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/zebra.png"); transform: rotateY(180deg); }
-
 </style>
 </head>
 <body>
@@ -90,26 +78,18 @@ let rotation = 0;
 let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
-let manualCenter = 0;
-
-const SPEED = 1.6;
-const DRAG_LIMIT = 90; // ドラッグ範囲広め
 const DRAG_SENS = 0.3;
+const SIDE_ANGLE = 75; // ±75°を側面扱い
 
 // 光と明るさ
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
-
 const rad = rotation * Math.PI / 180;
-
-// ハイライト横移動（左右奥行き感）
 const shineX = Math.sin(rad) * 30;
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
-
-// 左右の光の流れのみで明るさを統一
-const base = 0.85; // カード白寄り
-const flow = 0.15 * Math.sin(rad); // 左から明るく右が暗く
+const base = 0.85;
+const flow = 0.15 * Math.sin(rad);
 const brightness = base + flow;
 front.style.filter = `brightness(${brightness})`;
 back.style.filter = `brightness(${brightness})`;
@@ -118,7 +98,7 @@ back.style.filter = `brightness(${brightness})`;
 // 自動回転
 function animate() {
 if(autoRotate && !isDragging){
-rotation += SPEED;
+rotation += 1.6;
 }
 applyTransform();
 requestAnimationFrame(animate);
@@ -129,40 +109,49 @@ animate();
 function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
 function startDrag(e){
+const angleMod = ((rotation % 360) + 360) % 360;
+const sideLeft = 360 - SIDE_ANGLE;
+const sideRight = SIDE_ANGLE;
+// 側面付近ならドラッグ不可
+if((angleMod >= sideRight && angleMod <= 180 - sideRight) || (angleMod >= 180 + sideRight && angleMod <= 360 - sideRight)){
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
-const a = ((rotation % 360)+360)%360;
-manualCenter = (a<90 || a>270)? rotation-a : rotation-(a-180);
+}
 }
 
 function onDrag(e){
 if(!isDragging) return;
-let offset = (getX(e)-lastX)*DRAG_SENS;
-offset = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, offset));
-rotation = manualCenter + offset;
-applyTransform();
+const delta = (getX(e) - lastX) * DRAG_SENS;
+rotation += delta;
 lastX = getX(e);
+applyTransform();
 }
 
 function endDrag(){
+if(!isDragging) return;
 isDragging = false;
 autoRotate = true;
 }
+
+// クリックで側面から正面に戻す
+card.addEventListener('click', () => {
+const angleMod = ((rotation % 360) + 360) % 360;
+if(angleMod > SIDE_ANGLE && angleMod < 180 - SIDE_ANGLE){ // 側面左寄り
+rotation = 0; // 表正面
+} else if(angleMod > 180 + SIDE_ANGLE && angleMod < 360 - SIDE_ANGLE){ // 側面右寄り
+rotation = 180; // 裏正面
+}
+});
 
 // マウス
 card.addEventListener('mousedown', startDrag);
 window.addEventListener('mousemove', onDrag);
 window.addEventListener('mouseup', endDrag);
-
 // タッチ
 card.addEventListener('touchstart', startDrag,{passive:true});
 card.addEventListener('touchmove', onDrag,{passive:true});
 card.addEventListener('touchend', endDrag);
-
-// タップで停止/再開
-card.addEventListener('click', () => { autoRotate = !autoRotate; });
-
 </script>
 
 </body>
