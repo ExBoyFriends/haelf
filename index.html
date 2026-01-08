@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card with Side Handling</title>
+<title>3D Rotating Card</title>
 <style>
 html, body {
 margin: 0;
@@ -79,9 +79,10 @@ let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
 const DRAG_SENS = 0.3;
-const SIDE_ANGLE = 75; // ±75°を側面扱い
+const SIDE_ANGLE = 75; // ±75°付近は側面
 
-// 光と明るさ
+function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
+
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
 const rad = rotation * Math.PI / 180;
@@ -105,21 +106,30 @@ requestAnimationFrame(animate);
 }
 animate();
 
-// ドラッグ操作
-function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
-
+// ドラッグ開始
 function startDrag(e){
 const angleMod = ((rotation % 360) + 360) % 360;
-const sideLeft = 360 - SIDE_ANGLE;
+const sideLeft = 180 - SIDE_ANGLE;
 const sideRight = SIDE_ANGLE;
-// 側面付近ならドラッグ不可
-if((angleMod >= sideRight && angleMod <= 180 - sideRight) || (angleMod >= 180 + sideRight && angleMod <= 360 - sideRight)){
+
+// 側面付近はドラッグ無効
+if(angleMod < sideRight || (angleMod > sideLeft && angleMod < 180 + sideRight) || angleMod > 360 - sideRight){
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
+} else {
+// 側面クリックは近い正面に移動
+autoRotate = false;
+if(angleMod >= sideRight && angleMod <= 180 - sideRight){
+rotation = 0; // 表
+} else if(angleMod >= 180 + sideRight && angleMod <= 360 - sideRight){
+rotation = 180; // 裏
+}
+// 自動回転は離したら再開
 }
 }
 
+// ドラッグ中
 function onDrag(e){
 if(!isDragging) return;
 const delta = (getX(e) - lastX) * DRAG_SENS;
@@ -128,26 +138,17 @@ lastX = getX(e);
 applyTransform();
 }
 
+// ドラッグ終了
 function endDrag(){
-if(!isDragging) return;
 isDragging = false;
-autoRotate = true;
+autoRotate = true; // 離したら自動回転再開
 }
-
-// クリックで側面から正面に戻す
-card.addEventListener('click', () => {
-const angleMod = ((rotation % 360) + 360) % 360;
-if(angleMod > SIDE_ANGLE && angleMod < 180 - SIDE_ANGLE){ // 側面左寄り
-rotation = 0; // 表正面
-} else if(angleMod > 180 + SIDE_ANGLE && angleMod < 360 - SIDE_ANGLE){ // 側面右寄り
-rotation = 180; // 裏正面
-}
-});
 
 // マウス
 card.addEventListener('mousedown', startDrag);
 window.addEventListener('mousemove', onDrag);
 window.addEventListener('mouseup', endDrag);
+
 // タッチ
 card.addEventListener('touchstart', startDrag,{passive:true});
 card.addEventListener('touchmove', onDrag,{passive:true});
