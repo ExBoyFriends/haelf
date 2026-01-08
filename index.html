@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>3D Rotating Card v4</title>
+<title>3D Rotating Card v5</title>
 <style>
 html, body {
 margin: 0;
@@ -79,10 +79,10 @@ let autoRotate = true;
 let isDragging = false;
 let lastX = 0;
 const DRAG_SENS = 0.3;
-const DRAG_LIMIT = 60; // 正面基準 ±60°
-const SIDE_MARGIN = 60; // 正面±60°以外は側面
+const DRAG_LIMIT = 60; // ±60° 手動操作範囲
+const SIDE_MARGIN = 60; // 側面判定
 let manualCenter = 0;
-let returning = false; // 正面に戻るアニメーション中フラグ
+let returning = false; // 正面に戻るアニメ中フラグ
 
 function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
@@ -113,13 +113,15 @@ animate();
 // 正面に戻すアニメーション
 function smoothTo(target){
 returning = true;
+autoRotate = false;
 const speed = 0.15;
 function step(){
 const diff = target - rotation;
 if(Math.abs(diff) < 0.5){
 rotation = target;
 applyTransform();
-returning = false; // アニメーション完了
+returning = false; // アニメ終了
+autoRotate = true; // 自動回転再開
 return;
 }
 rotation += diff * speed;
@@ -129,7 +131,7 @@ requestAnimationFrame(step);
 step();
 }
 
-// クリック/タッチ開始
+// ドラッグ/タッチ開始
 function startDrag(e){
 const angleMod = ((rotation % 360) + 360) % 360;
 
@@ -137,9 +139,9 @@ const angleMod = ((rotation % 360) + 360) % 360;
 const nearSide = !((angleMod <= SIDE_MARGIN || angleMod >= 360 - SIDE_MARGIN) || (angleMod >= 180 - SIDE_MARGIN && angleMod <= 180 + SIDE_MARGIN));
 
 if(nearSide && !returning){
-// 側面クリック → 自動回転OFF、正面に戻す
-autoRotate = false;
+// 側面クリック → 正面に戻す
 returning = true;
+autoRotate = false;
 isDragging = false;
 if(angleMod < 180){
 smoothTo(0);
@@ -147,7 +149,7 @@ smoothTo(0);
 smoothTo(180);
 }
 } else if(!returning){
-// 正面・裏正面の範囲はドラッグ可能
+// 正面/裏正面はドラッグ可能
 isDragging = true;
 autoRotate = false;
 lastX = getX(e);
@@ -165,13 +167,8 @@ lastX = getX(e);
 applyTransform();
 }
 
-// クリック/タッチ終了
+// ドラッグ終了
 function endDrag(){
-if(returning){
-// 正面に戻ったあとにクリック離したら自動回転再開
-autoRotate = true;
-returning = false;
-}
 if(isDragging){
 isDragging = false;
 autoRotate = true;
