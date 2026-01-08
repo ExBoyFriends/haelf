@@ -159,8 +159,10 @@ autoRotate = false;
 lastX = getX(e);
 manualCenter = rotation; // この位置を基準にドラッグ可能
 if(angleMod < 180){
+manualCenter = 0;
 smoothTo(0);
 } else {
+manualCenter = 180;
 smoothTo(180);
 }
 isDragging = true;
