@@ -83,15 +83,26 @@ const SIDE_ANGLE = 75; // ±75°付近は側面
 
 function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
+// 光と明るさの適用
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
+
 const rad = rotation * Math.PI / 180;
+const angleMod = ((rotation % 360) + 360) % 360;
+
+// 表裏正面では常に明るさ最大
+let baseBrightness = 1.0;
+
+// 側面に近づくほど暗くする微調整
+const sideDiff = Math.min(Math.abs(angleMod % 180 - 90) / 90, 1); // 0=正面, 1=側面
+const flow = (1 - sideDiff) * 0.15 * Math.sin(rad);
+const brightness = baseBrightness + flow;
+
+// 光の方向（左右）も統一
 const shineX = Math.sin(rad) * 30;
+
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
-const base = 0.85;
-const flow = 0.15 * Math.sin(rad);
-const brightness = base + flow;
 front.style.filter = `brightness(${brightness})`;
 back.style.filter = `brightness(${brightness})`;
 }
@@ -125,7 +136,6 @@ rotation = 0; // 表
 } else if(angleMod >= 180 + sideRight && angleMod <= 360 - sideRight){
 rotation = 180; // 裏
 }
-// 自動回転は離したら再開
 }
 }
 
