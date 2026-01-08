@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Rotating Card with Correct Front/Back Light</title>
+<title>3D Thick Rotating Card</title>
 <style>
 html, body {
 margin: 0;
@@ -53,51 +53,47 @@ border-radius: 12px;
 transition: filter 0.05s;
 }
 
-/* 表面の反射 */
-.front::after {
+/* 反射 */
+.front::after, .back::after {
 content: '';
 position: absolute;
 inset: 10%;
 pointer-events: none;
-background: linear-gradient(110deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 100%);
 filter: blur(4px);
 transform: translateX(var(--shine-x, 0%));
 mix-blend-mode: screen;
-opacity: 0.6;
 border-radius: 12px;
 }
-
-/* 裏面の反射 */
-.back::after {
-content: '';
-position: absolute;
-inset: 10%;
-pointer-events: none;
-background: linear-gradient(110deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%);
-filter: blur(4px);
-transform: translateX(var(--shine-x, 0%));
-mix-blend-mode: screen;
-opacity: 0.5;
-border-radius: 12px;
-}
+.front::after { background: linear-gradient(110deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 100%); opacity: 0.6; }
+.back::after { background: linear-gradient(110deg, rgba(255,255,255,0.08) 0%, rgba(255,255,255,0) 100%); opacity: 0.5; }
 
 /* 表裏画像 */
-.front {
-background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/king.of.spades.png");
-}
+.front { background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/king.of.spades.png"); }
+.back { background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/zebra.png"); transform: rotateY(180deg); }
 
-.back {
-background-image: url("https://raw.githubusercontent.com/ExBoyFriends/haelf/main/zebra.png");
-transform: rotateY(180deg);
+/* 側面 */
+.side {
+position: absolute;
+top: 0;
+bottom: 0;
+width: 12px; /* 厚み */
+background: linear-gradient(to right, #222, #111);
+border-radius: 12px;
+transform-origin: center;
 }
+.left { left: 0; transform: rotateY(90deg) translateX(-50%); }
+.right { right: 0; transform: rotateY(-90deg) translateX(50%); }
+
 </style>
 </head>
 <body>
 
-<div class="wrap">zebra
+<div class="wrap">
 <div class="card" id="card">
 <div class="face front"></div>
 <div class="face back"></div>
+<div class="side left"></div>
+<div class="side right"></div>
 </div>
 </div>
 
@@ -113,31 +109,28 @@ let lastX = 0;
 let manualCenter = 0;
 
 const SPEED = 1.6;
-const DRAG_LIMIT = 85;
+const DRAG_LIMIT = 90; // ドラッグ範囲を広げた
 const DRAG_SENS = 0.3;
 
-/* 光と明るさを角度に応じて変化 */
+// 光と明るさ
 function applyTransform() {
 card.style.transform = `rotateY(${rotation}deg)`;
 
 const rad = rotation * Math.PI / 180;
 
-// 光の横移動で奥行き感
+// ハイライト横移動
 const shineX = Math.sin(rad) * 30;
 front.style.setProperty('--shine-x', `${shineX}%`);
 back.style.setProperty('--shine-x', `${shineX}%`);
 
-// 表：正面0°が最大明るさ
-const frontBrightness = 0.75 + 0.25 * Math.cos(rad);
-
-// 裏：正面180°が最大明るさ
-const backBrightness = 0.75 + 0.25 * Math.cos(rad - Math.PI);
-
-front.style.filter = `brightness(${frontBrightness})`;
-back.style.filter = `brightness(${backBrightness})`;
+// 左右の光の流れを統一
+const base = 0.75;
+const brightness = base + 0.25 * Math.sin(rad);
+front.style.filter = `brightness(${brightness})`;
+back.style.filter = `brightness(${brightness})`;
 }
 
-/* 自動回転 */
+// 自動回転
 function animate() {
 if(autoRotate && !isDragging){
 rotation += SPEED;
@@ -147,7 +140,7 @@ requestAnimationFrame(animate);
 }
 animate();
 
-/* ドラッグ操作 */
+// ドラッグ操作
 function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
 function startDrag(e){
@@ -181,6 +174,10 @@ window.addEventListener('mouseup', endDrag);
 card.addEventListener('touchstart', startDrag,{passive:true});
 card.addEventListener('touchmove', onDrag,{passive:true});
 card.addEventListener('touchend', endDrag);
+
+// タップで停止/再開
+card.addEventListener('click', () => { autoRotate = !autoRotate; });
+
 </script>
 
 </body>
