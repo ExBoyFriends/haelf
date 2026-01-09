@@ -25,8 +25,8 @@ const BASE_SPEED = 1.6;    // 自動回転速度
 const params = new URLSearchParams(location.search);
 const cardName = params.get('card') || 'king';
 
-front.style.backgroundImage = `url(images/${cardName}.png)`;
-back.style.backgroundImage  = `url(images/zebra.png)`;
+front.style.backgroundImage = `url(./images/${cardName}.png)`;
+back.style.backgroundImage  = `url(./images/zebra.png)`;
 
 /* ======================
    ユーティリティ
