@@ -3,16 +3,6 @@ const front = document.querySelector('.front');
 const back  = document.querySelector('.back');
 
 /* =========================
-   iOS ダブルタップズーム防止
-========================= */
-let lastTouchEnd = 0;
-document.addEventListener('touchend', e => {
-  const now = Date.now();
-  if (now - lastTouchEnd <= 300) e.preventDefault();
-  lastTouchEnd = now;
-}, { passive: false });
-
-/* =========================
    状態
 ========================= */
 let rotation   = 0;
@@ -23,10 +13,8 @@ let lastX = 0;
 let lastTime = 0;
 let velocity = 0;
 let spinBoost = 0;
+let dragDir = 0;
 
-let dragDir = 0;   // ★ 正面補完用
-
-const DRAG_LIMIT = 60;
 const BASE_SPEED = 1.6;
 
 /* =========================
@@ -42,38 +30,25 @@ back.style.backgroundImage  = `url(images/zebra.png)`;
    Transform
 ========================= */
 function applyTransform(){
+  // ★ 回転は card のみ
   card.style.transform = `rotateY(${rotation}deg)`;
 
   const rad = rotation * Math.PI / 180;
+  const facing = Math.cos(rad); // 表 / 裏
+  let side = Math.sin(rad);     // 左右
 
-  // 表裏判定
-  const facing = Math.cos(rad);   // +:表 / -:裏
-  let side     = Math.sin(rad);   // 左右
-
-  // ★ 正面付近ではドラッグ方向を使う
-  if (Math.abs(side) < 0.02) {
-    side = dragDir;
-  }
+  // 正面付近はドラッグ方向で補完
+  if (Math.abs(side) < 0.02) side = dragDir;
 
   const mirror = (facing < 0 ? -side : side) < 0 ? -1 : 1;
 
-  // 反転（Safariで消えない）
-  front.style.transform = `scaleX(${mirror})`;
+  // ★ Safari対策：rotateYを必ず含める
+  front.style.transform = `rotateY(0deg) scaleX(${mirror})`;
   back.style.transform  = `rotateY(180deg) scaleX(${mirror})`;
-
-  // 光
-  const brightness = 0.95 + Math.abs(side) * 0.1;
-  const shineX = side * 30;
-
-  front.style.filter = `brightness(${brightness})`;
-  back.style.filter  = `brightness(${brightness})`;
-
-  front.style.setProperty('--shine-x', `${shineX}%`);
-  back.style.setProperty('--shine-x',  `${shineX}%`);
 }
 
 /* =========================
-   アニメーション
+   Animation
 ========================= */
 function animate(){
   if(autoRotate && !isDragging){
@@ -95,8 +70,8 @@ function getX(e){
 function startDrag(e){
   lastX = getX(e);
   lastTime = performance.now();
-  velocity = 0;
   dragDir = 0;
+  velocity = 0;
 
   autoRotate = false;
   isDragging = true;
@@ -137,10 +112,3 @@ window.addEventListener('mouseup', endDrag);
 card.addEventListener('touchstart', startDrag, { passive:true });
 card.addEventListener('touchmove',  onDrag,   { passive:true });
 card.addEventListener('touchend',   endDrag);
-
-/* =========================
-   iOS ピンチ完全防止
-========================= */
-document.addEventListener('gesturestart', e => e.preventDefault());
-document.addEventListener('gesturechange', e => e.preventDefault());
-document.addEventListener('gestureend', e => e.preventDefault());
