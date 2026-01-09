@@ -1,11 +1,19 @@
 const card  = document.getElementById('card');
-const front = document.querySelector('.front');
-const back  = document.querySelector('.back');
+const frontArt = document.querySelector('.front-art');
+const backArt  = document.querySelector('.back-art');
+
+/* ======================
+   Config
+====================== */
+const BASE_SPEED = 1.6;
+const DRAG_SCALE = 0.4;
+const DRAG_LIMIT = 88;
+const FRONT_EPS  = 5;
 
 /* ======================
    State
 ====================== */
-let rotation = 0;
+let rotation   = 0;
 let autoRotate = true;
 let isDragging = false;
 
@@ -13,14 +21,7 @@ let lastX = 0;
 let dragAngle = 0;
 
 let mirrorFrame = false;
-
-/* ======================
-   Config
-====================== */
-const BASE_SPEED = 1.6;
-const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 85;
-const FRONT_EPS  = 5;
+let canMirror   = false;
 
 /* ======================
    Image
@@ -28,8 +29,8 @@ const FRONT_EPS  = 5;
 const params   = new URLSearchParams(location.search);
 const cardName = params.get('card') || 'king.of.spades';
 
-front.style.backgroundImage = `url(images/${cardName}.png)`;
-back.style.backgroundImage  = `url(images/zebra.png)`;
+frontArt.style.backgroundImage = `url(images/${cardName}.png)`;
+backArt.style.backgroundImage  = `url(images/zebra.png)`;
 
 /* ======================
    Utils
@@ -53,18 +54,16 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  const mirror = mirrorFrame ? -1 : 1;
-
-  // ★ rotateY を必ず含める
-  front.style.transform = `rotateY(0deg) scaleX(${mirror})`;
-  back.style.transform  = `rotateY(180deg)`;
+  const scale = mirrorFrame ? -1 : 1;
+  frontArt.style.transform = `scaleX(${scale})`;
+  backArt.style.transform  = `scaleX(${scale})`;
 }
 
 /* ======================
    Animation
 ====================== */
 function animate(){
-  mirrorFrame = false; // ← 毎フレーム解除
+  mirrorFrame = false;
 
   if(autoRotate && !isDragging){
     rotation += BASE_SPEED;
@@ -84,6 +83,9 @@ function startDrag(e){
 
   lastX = getX(e);
   dragAngle = 0;
+
+  // ★ 正面スタートかどうかだけを見る
+  canMirror = isFacingFront(rotation);
 }
 
 function onDrag(e){
@@ -93,20 +95,13 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
-  const prev = rotation + dragAngle;
-
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
 
-  const curr = rotation + dragAngle;
-
-  // ⭐ 正面 → 左に跨いだ瞬間のみ
-  if(
-    isFacingFront(prev) &&
-    normalize(prev) > 0 &&
-    normalize(curr) < 0
-  ){
+  // ★ 正面から左に動いた「瞬間」
+  if(canMirror && dx < 0){
     mirrorFrame = true;
+    canMirror = false;
 
     if(navigator.vibrate){
       navigator.vibrate(8);
@@ -120,6 +115,8 @@ function endDrag(){
 
   rotation += dragAngle;
   dragAngle = 0;
+
+  mirrorFrame = false;
 }
 
 /* ======================
