@@ -115,3 +115,34 @@ window.addEventListener('mouseup',   endDrag);
 card.addEventListener('touchstart', startDrag, { passive:true });
 card.addEventListener('touchmove',  onDrag,    { passive:true });
 card.addEventListener('touchend',   endDrag);
+
+/* ======================
+   iOSズーム完全防止
+====================== */
+
+// ピンチズーム防止（iOS Safari）
+document.addEventListener('gesturestart', e => {
+  e.preventDefault();
+});
+document.addEventListener('gesturechange', e => {
+  e.preventDefault();
+});
+document.addEventListener('gestureend', e => {
+  e.preventDefault();
+});
+
+// ダブルタップズーム防止
+let lastTouchEnd = 0;
+document.addEventListener(
+  'touchend',
+  e => {
+    const now = Date.now();
+    if (now - lastTouchEnd <= 300) {
+      e.preventDefault();
+    }
+    lastTouchEnd = now;
+  },
+  { passive: false }
+);
+
+
