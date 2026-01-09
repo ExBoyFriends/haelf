@@ -120,3 +120,6 @@ window.addEventListener('mouseup', endDrag);
 card.addEventListener('touchstart', startDrag, { passive:true });
 card.addEventListener('touchmove',  onDrag,    { passive:true });
 card.addEventListener('touchend',   endDrag);
+
+// 長押し禁止
+card.addEventListener('contextmenu', e => e.preventDefault());
