@@ -38,7 +38,8 @@ function applyTransform(){
   card.style.transform = `rotateY(${rotation}deg)`;
 
   const rad = rotation * Math.PI / 180;
-  const angleMod = ((rotation % 360) + 360) % 360;
+  const facing = Math.cos(rad); // 表裏
+  const side   = Math.sin(rad); // 左右
 
   // 光の演出
   const sideDiff = Math.min(Math.abs(angleMod % 180 - 90) / 90, 1);
