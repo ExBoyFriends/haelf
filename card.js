@@ -12,7 +12,7 @@ let isDragging = false;
 let lastX = 0;
 let dragAngle = 0;
 
-let mirrorFrame = false; // ← 一瞬だけ true
+let mirrorFrame = false;
 
 /* ======================
    Config
@@ -53,9 +53,11 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // ★ 反転は front だけ・一瞬
-  front.style.transform = mirrorFrame ? 'scaleX(-1)' : 'scaleX(1)';
-  back.style.transform  = 'rotateY(180deg)';
+  const mirror = mirrorFrame ? -1 : 1;
+
+  // ★ rotateY を必ず含める
+  front.style.transform = `rotateY(0deg) scaleX(${mirror})`;
+  back.style.transform  = `rotateY(180deg)`;
 }
 
 /* ======================
@@ -98,7 +100,7 @@ function onDrag(e){
 
   const curr = rotation + dragAngle;
 
-  // ⭐ 正面から左に跨いだ「瞬間だけ」
+  // ⭐ 正面 → 左に跨いだ瞬間のみ
   if(
     isFacingFront(prev) &&
     normalize(prev) > 0 &&
