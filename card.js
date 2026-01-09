@@ -18,6 +18,7 @@ let isDragging   = false;      // ドラッグ中フラグ
 let autoRotate   = true;       // 自動回転フラグ
 let lastX        = 0;          // 前回X座標
 let mirrorActive = false;      // 左傾き反転用フラグ
+let vibrated     = false;      // 触覚用フラグ
 
 /* ======================
    Images
@@ -95,9 +96,16 @@ function onDrag(e){
   // 左に傾いている間だけ反転
   mirrorActive = total < 0;
 
-  // 触覚（クリッ）効果
-  if(mirrorActive && navigator.vibrate){
-    navigator.vibrate(8);
+  // 反転フラグと触覚
+  if(currentlyLeft && !mirrorActive){
+    mirrorActive = true;
+    if(navigator.vibrate && !vibrated){
+      navigator.vibrate(8);
+      vibrated = true; // 一度だけ
+    }
+  } else if(!currentlyLeft && mirrorActive){
+    mirrorActive = false;
+    vibrated = false;
   }
 }
 
