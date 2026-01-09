@@ -86,12 +86,11 @@ function onDrag(e){
 
   dragAngle += dx * DRAG_SCALE;
 
-  // 裏表関係なく、中心基準で左右制限
-  let total = rotation + dragAngle;
-  if(total > DRAG_LIMIT) dragAngle -= total - DRAG_LIMIT;
-  if(total < -DRAG_LIMIT) dragAngle -= total + DRAG_LIMIT;
+  // 中心基準で左右制限
+  if(rotation + dragAngle > DRAG_LIMIT) dragAngle = DRAG_LIMIT - rotation;
+  if(rotation + dragAngle < -DRAG_LIMIT) dragAngle = -DRAG_LIMIT - rotation;
 
-  total = rotation + dragAngle;
+  const total = rotation + dragAngle;
 
   // 左に傾いている間だけ反転
   mirrorActive = total < 0;
