@@ -24,6 +24,7 @@ body {
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
+  will-change: transform;
   border-radius: 12px;
 }
 
