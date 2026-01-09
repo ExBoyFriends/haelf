@@ -19,12 +19,13 @@ let rotation   = 0;
 let autoRotate = true;
 let isDragging = false;
 
-let lastX     = 0;
-let lastTime  = 0;
-let velocity  = 0;
+let lastX = 0;
+let velocity = 0;
 let spinBoost = 0;
 
-let mirror     = 1;
+let dragBaseRotation = 0;
+
+let mirror = 1;
 let lastMirror = 1;
 
 /* =====================
@@ -33,9 +34,9 @@ let lastMirror = 1;
 const BASE_SPEED = 1.6;
 const DRAG_SCALE = 0.45;
 
-/* ソフトストッパー */
-const DRAG_SOFT = 130;  // ここから重くなる
-const DRAG_MAX  = 155;  // ほぼ裏返る直前
+/* 側面制限（重要） */
+const FREE_LIMIT = 85;   // 完全自由
+const HARD_LIMIT = 92;   // 絶対越えない
 
 /* =====================
    画像
@@ -47,23 +48,10 @@ front.style.backgroundImage = `url(images/${cardName}.png)`;
 back.style.backgroundImage  = `url(images/zebra.png)`;
 
 /* =====================
-   触覚（Android + iOS擬似）
+   触覚
 ===================== */
-let audioCtx = null;
 function haptic(){
-  if (navigator.vibrate) {
-    navigator.vibrate(10);
-  } else {
-    if (!audioCtx) {
-      audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    const osc  = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    gain.gain.value = 0.001;
-    osc.connect(gain).connect(audioCtx.destination);
-    osc.start();
-    osc.stop(audioCtx.currentTime + 0.01);
-  }
+  if (navigator.vibrate) navigator.vibrate(10);
 }
 
 /* =====================
@@ -85,19 +73,13 @@ function applyTransform(){
   front.style.setProperty('--shine-x', `${shineX}%`);
   back.style.setProperty('--shine-x',  `${shineX}%`);
 
-  /* ---- -180〜180 ---- */
-  let angle = ((rotation + 180) % 360) - 180;
-
-  /* ---- 反転はドラッグ中のみ ---- */
+  /* 反転（ドラッグ中のみ） */
   mirror = 1;
   if (isDragging) {
-    mirror = angle < 0 ? -1 : 1;
+    mirror = Math.cos(rad) < 0 ? -1 : 1;
   }
 
-  /* ---- 反転瞬間の触覚 ---- */
-  if (isDragging && mirror !== lastMirror) {
-    haptic();
-  }
+  if (isDragging && mirror !== lastMirror) haptic();
   lastMirror = mirror;
 
   front.style.transform = `rotateY(0deg) scaleX(${mirror})`;
@@ -126,41 +108,43 @@ function getX(e){
 
 function startDrag(e){
   lastX = getX(e);
-  lastTime = performance.now();
   velocity = 0;
   autoRotate = false;
   isDragging = true;
+
+  /* ★ 基準角を固定 */
+  dragBaseRotation = rotation;
 }
 
 function onDrag(e){
   if (!isDragging) return;
 
-  const now = performance.now();
-  const x   = getX(e);
-  let dx    = x - lastX;
-  const dt  = now - lastTime || 1;
+  const x = getX(e);
+  const dx = x - lastX;
 
-  velocity = dx / dt;
+  let delta = dx * DRAG_SCALE;
+  let target = rotation + delta;
 
-  /* ---- 現在角度を -180〜180 ---- */
-  let angle = ((rotation + 180) % 360) - 180;
+  /* 基準からの相対角 */
+  let diff = target - dragBaseRotation;
 
-  /* ---- ソフトストッパー ---- */
-  let scale = 1;
-  if (Math.abs(angle) > DRAG_SOFT) {
-    const t = (Math.abs(angle) - DRAG_SOFT) / (DRAG_MAX - DRAG_SOFT);
-    scale = Math.max(0.15, 1 - t);
+  /* ソフト制限 */
+  if (Math.abs(diff) > FREE_LIMIT) {
+    const t = (Math.abs(diff) - FREE_LIMIT) / (HARD_LIMIT - FREE_LIMIT);
+    const damp = Math.max(0.15, 1 - t);
+    delta *= damp;
+    target = rotation + delta;
+    diff = target - dragBaseRotation;
   }
 
-  rotation += dx * DRAG_SCALE * scale;
+  /* ハード制限 */
+  if (diff > HARD_LIMIT)  target = dragBaseRotation + HARD_LIMIT;
+  if (diff < -HARD_LIMIT) target = dragBaseRotation - HARD_LIMIT;
 
-  /* ---- 安全ハード止め ---- */
-  angle = ((rotation + 180) % 360) - 180;
-  if (angle > DRAG_MAX)  rotation += DRAG_MAX - angle;
-  if (angle < -DRAG_MAX) rotation += -DRAG_MAX - angle;
+  rotation = target;
 
+  velocity = dx;
   lastX = x;
-  lastTime = now;
 }
 
 function endDrag(){
@@ -168,7 +152,7 @@ function endDrag(){
   autoRotate = true;
 
   if (Math.abs(velocity) > 0.6) {
-    spinBoost = velocity * 120;
+    spinBoost = velocity * 0.6;
   }
 }
 
