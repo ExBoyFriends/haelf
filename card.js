@@ -5,19 +5,22 @@ const back  = document.querySelector('.back');
 /* ======================
    Config
 ====================== */
-const BASE_SPEED = 1.4;
-const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 88;
+const BASE_SPEED = 1.4;   // 自動回転速度
+const DRAG_SCALE = 0.35;  // ドラッグ角度変換倍率
+const DRAG_LIMIT = 88;    // ドラッグ制限（側面手前まで）
+const FRONT_EPS  = 6;     // 正面判定誤差
 
 /* ======================
    State
 ====================== */
-let rotation   = 0;
-let dragAngle  = 0;
+let rotation   = 0;       // 自動回転角度
+let dragAngle  = 0;       // ドラッグで追加される角度
 let isDragging = false;
 let autoRotate = true;
 let lastX      = 0;
-let mirrorActive = false;
+
+let mirrorActive = false; // 左に傾けたときだけ切替
+let prevTotal = 0;        // 前フレームの合計角度
 
 /* ======================
    Images
@@ -27,7 +30,7 @@ const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/joker2.png';
 
-/* 初期 */
+/* 初期表示 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
 back.style.backgroundImage  = `url(${BACK_NORMAL})`;
 
@@ -42,13 +45,8 @@ function normalize(a){
   return ((a + 180) % 360) - 180;
 }
 
-// 表裏に関係なく「真正面」を判定
-function getVisibleAngle(){
-  const total = normalize(rotation + dragAngle);
-  // 裏面は180度回転しているので補正
-  const frontVisible = (total >= -90 && total <= 90);
-  const backVisible  = (total >= 90 || total <= -90);
-  return frontVisible ? total : normalize(total - 180);
+function isFacingFront(angle){
+  return Math.abs(normalize(angle)) < FRONT_EPS;
 }
 
 /* ======================
@@ -58,6 +56,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
+  // ★ 左傾き（正面を跨いだ）だけ切替
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -71,10 +70,13 @@ function applyTransform(){
    Animation
 ====================== */
 function animate(){
+  // 自動回転
   if(autoRotate && !isDragging){
     rotation += BASE_SPEED;
   }
+
   applyTransform();
+  prevTotal = rotation + dragAngle;
   requestAnimationFrame(animate);
 }
 animate();
@@ -97,21 +99,15 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
-  const prev = getVisibleAngle();
-
+  const totalPrev = rotation + dragAngle;
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
+  const totalCurr = rotation + dragAngle;
 
-  const curr = getVisibleAngle();
-
-  // 真正面から左に傾けた瞬間だけ反転
-  if(prev >= 0 && curr < 0){
+  // ★ 左に傾いたら切替（正面を跨いだ瞬間だけでなく、左→正面の途中でもON）
+  if(normalize(totalCurr) < 0){
     mirrorActive = true;
-    if(navigator.vibrate) navigator.vibrate(8);
-  }
-
-  // 真正面より右に戻ったら解除
-  if(curr > 0){
+  } else {
     mirrorActive = false;
   }
 }
@@ -121,8 +117,7 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-
-  mirrorActive = false;
+  mirrorActive = false; // 指離したら解除
 }
 
 /* ======================
