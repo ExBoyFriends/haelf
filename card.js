@@ -7,7 +7,7 @@ const back  = document.querySelector('.back');
 ====================== */
 const BASE_SPEED = 1.4;
 const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 40; // ±40°に制限
+const DRAG_LIMIT = 56; // ±56度のドラッグ範囲
 
 /* ======================
    State
@@ -44,7 +44,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 左傾き時のみ反転
+  // 左に傾いている時だけ反転画像、指離すと元に戻る
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -70,9 +70,23 @@ animate();
    Drag
 ====================== */
 function startDrag(e){
+  const x = getX(e);
+
+  // 現在の角度を取得
+  const total = rotation;
+  const normalized = normalize(total);
+  const isBack = normalized > 90 || normalized < -90;
+  const angleFromCenter = isBack ? normalize(total - 180) : normalized;
+
+  // 範囲外ならドラッグ開始せず、自動回転は続く
+  if(angleFromCenter > DRAG_LIMIT || angleFromCenter < -DRAG_LIMIT){
+    return;
+  }
+
+  // 範囲内ならドラッグ開始
   isDragging = true;
   autoRotate = false;
-  lastX = getX(e);
+  lastX = x;
   dragAngle = 0;
   mirrorActive = false;
 }
@@ -84,23 +98,19 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
-  let newDrag = dragAngle + dx * DRAG_SCALE;
+  dragAngle += dx * DRAG_SCALE;
 
-  // 現在のカード角度（表面基準）を取得
-  const total = rotation + newDrag;
+  // カード中心基準で左右 ±DRAG_LIMIT に制限
+  if(dragAngle > DRAG_LIMIT) dragAngle = DRAG_LIMIT;
+  if(dragAngle < -DRAG_LIMIT) dragAngle = -DRAG_LIMIT;
+
+  const total = rotation + dragAngle;
   const normalized = normalize(total);
+
+  // 表裏共通で左に傾いているときだけ反転
   const isBack = normalized > 90 || normalized < -90;
-  const angleFromCenter = isBack ? normalize(total - 180) : normalized;
-
-  // ±DRAG_LIMITで制御。範囲外ならドラッグ無効（dragAngleは更新しない）
-  if(angleFromCenter > DRAG_LIMIT || angleFromCenter < -DRAG_LIMIT){
-    return; // ドラッグ操作無視、autoRotateはそのまま動く
-  }
-
-  dragAngle = newDrag;
-
-  // 左傾き時のみ反転
-  mirrorActive = angleFromCenter < 0;
+  const angleForMirror = isBack ? normalize(total - 180) : normalized;
+  mirrorActive = angleForMirror < 0;
 }
 
 function endDrag(){
@@ -108,7 +118,7 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-  mirrorActive = false; // 指離したら元に戻す
+  mirrorActive = false; // 指離したら即戻す
 }
 
 /* ======================
