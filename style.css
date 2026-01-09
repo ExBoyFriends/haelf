@@ -34,8 +34,8 @@ body {
   height: 100%;
   backface-visibility: hidden;
   background-repeat: no-repeat;
-  background-size: contain;
-  background-position: center center;
+  background-size: cover;
+background-position: 50% 50%;
   border-radius: 12px;
 }
 
