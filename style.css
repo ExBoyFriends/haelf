@@ -29,6 +29,7 @@ transform-style: preserve-3d;
 user-select: none;
 touch-action: none;
 border-radius: 12px;
+overflow: hidden; 
 }
 
 .face {
