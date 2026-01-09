@@ -15,28 +15,26 @@ document.addEventListener('touchend', e => {
 /* =====================
    状態
 ===================== */
-let rotation   = 0;
+let rotation = 0;
 let autoRotate = true;
 let isDragging = false;
+
+let dragBaseRotation = 0;
+let dragAngle = 0;
+let prevDragAngle = 0;
+
+let flipped = false; // ★ 反転状態
 
 let lastX = 0;
 let velocity = 0;
 let spinBoost = 0;
 
-let dragBaseRotation = 0;
-let dragDir = 1;
-
-let mirror = 1;
-let lastMirror = 1;
-
 /* =====================
-   調整値
+   設定
 ===================== */
 const BASE_SPEED = 1.6;
-const DRAG_SCALE = 0.5;
-
-const FREE_LIMIT = 85;
-const HARD_LIMIT = 92;
+const DRAG_SCALE = 0.4;
+const DRAG_LIMIT = 88; // 完全側面の手前で止める
 
 /* =====================
    画像
@@ -48,42 +46,13 @@ front.style.backgroundImage = `url(images/${cardName}.png)`;
 back.style.backgroundImage  = `url(images/zebra.png)`;
 
 /* =====================
-   触覚
-===================== */
-function haptic(){
-  if (navigator.vibrate) navigator.vibrate(10);
-}
-
-/* =====================
    Transform
 ===================== */
 function applyTransform(){
-  card.style.transform = `rotateY(${rotation}deg)`;
+  const total = rotation + dragAngle;
+  card.style.transform = `rotateY(${total}deg)`;
 
-  const rad = rotation * Math.PI / 180;
-
-  /* 光 */
-  const side = Math.abs(Math.sin(rad));
-  const brightness = 0.95 + (1 - side) * 0.1;
-  const shineX = Math.sin(rad) * 30;
-
-  front.style.filter = `brightness(${brightness})`;
-  back.style.filter  = `brightness(${brightness})`;
-
-  front.style.setProperty('--shine-x', `${shineX}%`);
-  back.style.setProperty('--shine-x',  `${shineX}%`);
-
-  /* 表裏判定 */
-  const facing = Math.cos(rad) >= 0 ? 1 : -1;
-
-  /* 反転はドラッグ中のみ */
-  mirror = 1;
-  if (isDragging) {
-    mirror = dragDir * facing < 0 ? -1 : 1;
-  }
-
-  if (isDragging && mirror !== lastMirror) haptic();
-  lastMirror = mirror;
+  const mirror = flipped ? -1 : 1;
 
   front.style.transform = `rotateY(0deg) scaleX(${mirror})`;
   back.style.transform  = `rotateY(180deg) scaleX(${mirror})`;
@@ -93,7 +62,7 @@ function applyTransform(){
    アニメーション
 ===================== */
 function animate(){
-  if (autoRotate && !isDragging) {
+  if(autoRotate && !isDragging){
     rotation += BASE_SPEED + spinBoost;
     spinBoost *= 0.92;
   }
@@ -112,66 +81,69 @@ function getX(e){
 function startDrag(e){
   lastX = getX(e);
   velocity = 0;
+
   autoRotate = false;
   isDragging = true;
 
   dragBaseRotation = rotation;
+  dragAngle = 0;
+  prevDragAngle = 0;
 }
 
 function onDrag(e){
-  if (!isDragging) return;
+  if(!isDragging) return;
 
-  const x  = getX(e);
+  const x = getX(e);
   const dx = x - lastX;
-
-  dragDir = Math.sign(dx) || dragDir;
-
-  let delta = dx * DRAG_SCALE;
-  let target = rotation + delta;
-
-  let diff = target - dragBaseRotation;
-
-  /* ソフト制限 */
-  if (Math.abs(diff) > FREE_LIMIT) {
-    const t = (Math.abs(diff) - FREE_LIMIT) / (HARD_LIMIT - FREE_LIMIT);
-    delta *= Math.max(0.15, 1 - t);
-    target = rotation + delta;
-    diff = target - dragBaseRotation;
-  }
-
-  /* ハード制限 */
-  if (diff > HARD_LIMIT)  target = dragBaseRotation + HARD_LIMIT;
-  if (diff < -HARD_LIMIT) target = dragBaseRotation - HARD_LIMIT;
-
-  rotation = target;
-
-  velocity = dx;
   lastX = x;
+
+  prevDragAngle = dragAngle;
+  dragAngle += dx * DRAG_SCALE;
+
+  // 側面ストッパー
+  dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
+
+  // ★ 正面（0）を跨いだ瞬間だけ反転トグル
+  if (prevDragAngle === 0) return;
+
+  if (
+    (prevDragAngle < 0 && dragAngle >= 0) ||
+    (prevDragAngle > 0 && dragAngle <= 0)
+  ){
+    flipped = !flipped;
+    haptic();
+  }
 }
 
 function endDrag(){
   isDragging = false;
+  rotation += dragAngle;
+  dragAngle = 0;
   autoRotate = true;
-
-  if (Math.abs(velocity) > 0.6) {
-    spinBoost = velocity * 0.6;
-  }
 }
 
 /* =====================
-   Events
+   触覚
+===================== */
+function haptic(){
+  if (navigator.vibrate) navigator.vibrate(8);
+}
+
+/* =====================
+   イベント
 ===================== */
 card.addEventListener('mousedown', startDrag);
 window.addEventListener('mousemove', onDrag);
-window.addEventListener('mouseup',   endDrag);
+window.addEventListener('mouseup', endDrag);
 
 card.addEventListener('touchstart', startDrag, { passive:true });
-card.addEventListener('touchmove',  onDrag,    { passive:true });
-card.addEventListener('touchend',   endDrag);
+card.addEventListener('touchmove', onDrag, { passive:true });
+card.addEventListener('touchend', endDrag);
 
 /* =====================
-   iOS gesture 抑止
+   iOS gesture 防止
 ===================== */
-document.addEventListener('gesturestart',  e => e.preventDefault());
-document.addEventListener('gesturechange', e => e.preventDefault());
-document.addEventListener('gestureend',    e => e.preventDefault());
+['gesturestart','gesturechange','gestureend']
+  .forEach(ev =>
+    document.addEventListener(ev, e => e.preventDefault())
+  );
