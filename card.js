@@ -13,15 +13,12 @@ document.addEventListener('touchend', (e) => {
 let rotation   = 0;
 let autoRotate = true;
 let isDragging = false;
-let returning  = false;
 
 let lastX = 0;
 let lastTime = 0;
 let velocity = 0;
 let spinBoost = 0;
-let manualCenter = 0;
 
-const DRAG_LIMIT  = 60;
 const BASE_SPEED  = 1.6;
 
 /* URL */
@@ -51,7 +48,16 @@ function applyTransform(){
   front.style.setProperty('--shine-x', `${shineX}%`);
   back.style.setProperty('--shine-x',  `${shineX}%`);
 
-  // scaleXを廃止 → フロント消失防止
+  // 表裏判定を角度で明示
+  if (angleMod > 90 && angleMod < 270) {
+    front.style.visibility = 'hidden';
+    back.style.visibility  = 'visible';
+  } else {
+    front.style.visibility = 'visible';
+    back.style.visibility  = 'hidden';
+  }
+
+  // transform は固定
   front.style.transform = `rotateY(0deg)`;
   back.style.transform  = `rotateY(180deg)`;
 }
@@ -60,7 +66,7 @@ function applyTransform(){
    アニメーション
 ------------------------- */
 function animate(){
-  if(autoRotate && !isDragging && !returning){
+  if(autoRotate && !isDragging){
     rotation += BASE_SPEED + spinBoost;
     spinBoost *= 0.92;
   }
@@ -78,11 +84,8 @@ function startDrag(e){
   lastX = getX(e);
   lastTime = performance.now();
   velocity = 0;
-
-  const angleMod = ((rotation % 360) + 360) % 360;
   autoRotate = false;
   isDragging = true;
-  manualCenter = angleMod < 180 ? 0 : 180;
 }
 
 function onDrag(e){
@@ -93,7 +96,7 @@ function onDrag(e){
   const dt = now - lastTime || 1;
 
   velocity = dx / dt;
-  rotation = manualCenter + Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dx));
+  rotation += dx; // 制限なしで自然に回転
 
   lastX = x;
   lastTime = now;
