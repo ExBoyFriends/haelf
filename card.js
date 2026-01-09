@@ -7,7 +7,7 @@ const back  = document.querySelector('.back');
 ====================== */
 const BASE_SPEED = 1.4;
 const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 60; // ±60°のドラッグ範囲
+const DRAG_LIMIT = 70; // ±70°のドラッグ範囲
 
 /* ======================
    State
