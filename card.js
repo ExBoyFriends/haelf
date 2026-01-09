@@ -42,11 +42,13 @@ function normalize(a){
   return ((a + 180) % 360) - 180;
 }
 
-// 裏表どちらでも「正面向き」を検知
+// 表裏に関係なく「真正面」を判定
 function getVisibleAngle(){
-  const total = rotation + dragAngle;
-  // 表が見える範囲 [-90,90] を正面として扱う
-  return (normalize(total) <= 90 && normalize(total) >= -90) ? normalize(total) : normalize(total - 180);
+  const total = normalize(rotation + dragAngle);
+  // 裏面は180度回転しているので補正
+  const frontVisible = (total >= -90 && total <= 90);
+  const backVisible  = (total >= 90 || total <= -90);
+  return frontVisible ? total : normalize(total - 180);
 }
 
 /* ======================
@@ -56,7 +58,6 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 反転は画像切替のみ
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -96,21 +97,21 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
-  const prevVisible = getVisibleAngle();
+  const prev = getVisibleAngle();
 
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
 
-  const currVisible = getVisibleAngle();
+  const curr = getVisibleAngle();
 
-  // ★ 真正面から左に傾けた瞬間だけ反転
-  if(prevVisible >= 0 && currVisible < 0){
+  // 真正面から左に傾けた瞬間だけ反転
+  if(prev >= 0 && curr < 0){
     mirrorActive = true;
     if(navigator.vibrate) navigator.vibrate(8);
   }
 
-  // ★ 真正面より右に戻ったら即解除
-  if(currVisible > 0){
+  // 真正面より右に戻ったら解除
+  if(curr > 0){
     mirrorActive = false;
   }
 }
@@ -121,7 +122,6 @@ function endDrag(){
   rotation += dragAngle;
   dragAngle = 0;
 
-  // 指を離したら必ず解除
   mirrorActive = false;
 }
 
