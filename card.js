@@ -1,136 +1,140 @@
-const card  = document.getElementById('card');
-const front = document.querySelector('.front');
-const back  = document.querySelector('.back');
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const card  = document.getElementById('card');
+  const front = document.querySelector('.front');
+  const back  = document.querySelector('.back');
 
-/* ======================
-   Config
-====================== */
-const BASE_SPEED = 1.4;
-const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 88;
-const FRONT_EPS  = 6;
+  /* ======================
+     Config
+  ===================== */
+  const BASE_SPEED = 1.4;
+  const DRAG_SCALE = 0.35;
+  const DRAG_LIMIT = 88;
+  const FRONT_EPS  = 6;
 
-/* ======================
-   State
-====================== */
-let rotation   = 0;
-let dragAngle  = 0;
-let isDragging = false;
-let autoRotate = true;
-let lastX      = 0;
+  /* ======================
+     State
+  ===================== */
+  let rotation   = 0;
+  let dragAngle  = 0;
+  let isDragging = false;
+  let autoRotate = true;
+  let lastX      = 0;
+  let mirrorActive = false;
 
-let mirrorActive = false;
+  /* ======================
+     Images
+  ===================== */
+  const FRONT_NORMAL = 'images/king.of.spades.png';
+  const FRONT_MIRROR = 'images/joker1.png';
+  const BACK_NORMAL  = 'images/zebra.png';
+  const BACK_MIRROR  = 'images/joker2.png';
 
-/* ======================
-   Images
-====================== */
-const FRONT_NORMAL = 'images/king.of.spades.png';
-const FRONT_MIRROR = 'images/joker1.png';
-const BACK_NORMAL  = 'images/zebra.png';
-const BACK_MIRROR  = 'images/joker2.png';
+  front.style.backgroundImage = `url(${FRONT_NORMAL})`;
+  back.style.backgroundImage  = `url(${BACK_NORMAL})`;
 
-/* 初期 */
-front.style.backgroundImage = `url(${FRONT_NORMAL})`;
-back.style.backgroundImage  = `url(${BACK_NORMAL})`;
-
-/* ======================
-   Utils
-====================== */
-function getX(e){
-  return e.touches ? e.touches[0].clientX : e.clientX;
-}
-
-function normalize(a){
-  return ((a + 180) % 360) - 180;
-}
-
-function isFacingFront(angle){
-  return Math.abs(normalize(angle)) < FRONT_EPS;
-}
-
-/* ======================
-   Transform
-====================== */
-function applyTransform(){
-  const total = rotation + dragAngle;
-  card.style.transform = `rotateY(${total}deg)`;
-
-  // 正面から左に傾いたときだけ切り替え
-  if(mirrorActive){
-    front.style.backgroundImage = `url(${FRONT_MIRROR})`;
-    back.style.backgroundImage  = `url(${BACK_MIRROR})`;
-  } else {
-    front.style.backgroundImage = `url(${FRONT_NORMAL})`;
-    back.style.backgroundImage  = `url(${BACK_NORMAL})`;
+  /* ======================
+     Utils
+  ===================== */
+  function getX(e){
+    return e.touches ? e.touches[0].clientX : e.clientX;
   }
-}
 
-/* ======================
-   Animation
-====================== */
-function animate(){
-  if(autoRotate && !isDragging){
-    rotation += BASE_SPEED;
+  function normalize(a){
+    return ((a + 180) % 360) - 180;
   }
-  applyTransform();
-  requestAnimationFrame(animate);
-}
-animate();
 
-/* ======================
-   Drag
-====================== */
-function startDrag(e){
-  isDragging = true;
-  autoRotate = false;
-  lastX = getX(e);
-  dragAngle = 0;
-  mirrorActive = false;
-}
+  function isFacingFront(angle){
+    return Math.abs(normalize(angle)) < FRONT_EPS;
+  }
 
-function onDrag(e){
-  if(!isDragging) return;
+  /* ======================
+     Transform
+  ===================== */
+  function applyTransform(){
+    const total = rotation + dragAngle;
+    card.style.transform = `rotateY(${total}deg)`;
 
-  const x  = getX(e);
-  const dx = x - lastX;
-  lastX = x;
-
-  const prev = rotation + dragAngle;
-  dragAngle += dx * DRAG_SCALE;
-  dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
-  const curr = rotation + dragAngle;
-
-  // ★ 正面から左に跨いだ瞬間だけ切り替え
-  if(isFacingFront(prev) && normalize(prev) >= 0 && normalize(curr) < 0){
-    mirrorActive = true;
-    if(navigator.vibrate){
-      navigator.vibrate(8);
+    // ★ 画像切り替え
+    if(mirrorActive){
+      front.style.backgroundImage = `url(${FRONT_MIRROR})`;
+      back.style.backgroundImage  = `url(${BACK_MIRROR})`;
+    } else {
+      front.style.backgroundImage = `url(${FRONT_NORMAL})`;
+      back.style.backgroundImage  = `url(${BACK_NORMAL})`;
     }
   }
 
-  // ★ 右に戻ったら即解除
-  if(normalize(rotation + dragAngle) > 0){
+  /* ======================
+     Animation
+  ===================== */
+  function animate(){
+    if(autoRotate && !isDragging){
+      rotation += BASE_SPEED;
+    }
+    applyTransform();
+    requestAnimationFrame(animate);
+  }
+  animate();
+
+  /* ======================
+     Drag
+  ===================== */
+  function startDrag(e){
+    isDragging = true;
+    autoRotate = false;
+    lastX = getX(e);
+    dragAngle = 0;
     mirrorActive = false;
   }
-}
 
-function endDrag(){
-  isDragging = false;
-  autoRotate = true;
-  rotation += dragAngle;
-  dragAngle = 0;
+  function onDrag(e){
+    if(!isDragging) return;
 
-  // 指離したら必ず解除
-  mirrorActive = false;
-}
+    const x  = getX(e);
+    const dx = x - lastX;
+    lastX = x;
 
-/* ======================
-   Events
-====================== */
-card.addEventListener('mousedown', startDrag);
-window.addEventListener('mousemove', onDrag);
-window.addEventListener('mouseup', endDrag);
+    const prevTotal = rotation + dragAngle;
 
-card.addEventListener('touchstart', startDrag, { passive:true });
-card.addEventListener('touchmove',  onDrag,    { passive:true });
-card.addEventListener('touchend',   endDrag);
+    dragAngle += dx * DRAG_SCALE;
+    dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
+
+    const currTotal = rotation + dragAngle;
+
+    // ★ 真正面から左に跨いだ瞬間だけ反転
+    if(
+      isFacingFront(prevTotal) &&
+      normalize(prevTotal) >= 0 &&
+      normalize(currTotal) < 0
+    ){
+      mirrorActive = true;
+      if(navigator.vibrate) navigator.vibrate(8);
+    }
+
+    // ★ 右に戻ったら即解除
+    if(mirrorActive && normalize(currTotal) >= 0){
+      mirrorActive = false;
+    }
+  }
+
+  function endDrag(){
+    isDragging = false;
+    autoRotate = true;
+    rotation += dragAngle;
+    dragAngle = 0;
+    mirrorActive = false; // 指離したら即解除
+  }
+
+  /* ======================
+     Events
+  ===================== */
+  card.addEventListener('mousedown', startDrag);
+  window.addEventListener('mousemove', onDrag);
+  window.addEventListener('mouseup', endDrag);
+
+  card.addEventListener('touchstart', startDrag, { passive:true });
+  card.addEventListener('touchmove',  onDrag,    { passive:true });
+  card.addEventListener('touchend',   endDrag);
+});
+</script>
