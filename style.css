@@ -1,18 +1,30 @@
-/* style.css */
+/* =========================
+   Reset / 全体
+========================= */
 html, body {
   margin: 0;
   width: 100%;
   height: 100%;
   background: #000;
-  touch-action: none;
+  touch-action: none; /* ズーム・スクロール禁止 */
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
+/* =========================
+   Body
+========================= */
 body {
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden; /* ページスクロール無効 */
 }
 
+/* =========================
+   Wrapper（遠近）
+========================= */
 .wrap {
   width: 90vw;
   max-width: 260px;
@@ -20,14 +32,21 @@ body {
   perspective: 1200px;
 }
 
+/* =========================
+   Card
+========================= */
 .card {
   width: 100%;
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
   will-change: transform;
+  border-radius: 12px;
 }
 
+/* =========================
+   Face（表・裏）
+========================= */
 .face {
   position: absolute;
   inset: 0;
