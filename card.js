@@ -24,6 +24,7 @@ let velocity = 0;
 let spinBoost = 0;
 
 let dragBaseRotation = 0;
+let dragDir = 1;
 
 let mirror = 1;
 let lastMirror = 1;
@@ -32,11 +33,10 @@ let lastMirror = 1;
    調整値
 ===================== */
 const BASE_SPEED = 1.6;
-const DRAG_SCALE = 0.45;
+const DRAG_SCALE = 0.5;
 
-/* 側面制限（重要） */
-const FREE_LIMIT = 85;   // 完全自由
-const HARD_LIMIT = 92;   // 絶対越えない
+const FREE_LIMIT = 85;
+const HARD_LIMIT = 92;
 
 /* =====================
    画像
@@ -73,10 +73,13 @@ function applyTransform(){
   front.style.setProperty('--shine-x', `${shineX}%`);
   back.style.setProperty('--shine-x',  `${shineX}%`);
 
-  /* 反転（ドラッグ中のみ） */
+  /* 表裏判定 */
+  const facing = Math.cos(rad) >= 0 ? 1 : -1;
+
+  /* 反転はドラッグ中のみ */
   mirror = 1;
   if (isDragging) {
-    mirror = Math.cos(rad) < 0 ? -1 : 1;
+    mirror = dragDir * facing < 0 ? -1 : 1;
   }
 
   if (isDragging && mirror !== lastMirror) haptic();
@@ -112,27 +115,26 @@ function startDrag(e){
   autoRotate = false;
   isDragging = true;
 
-  /* ★ 基準角を固定 */
   dragBaseRotation = rotation;
 }
 
 function onDrag(e){
   if (!isDragging) return;
 
-  const x = getX(e);
+  const x  = getX(e);
   const dx = x - lastX;
+
+  dragDir = Math.sign(dx) || dragDir;
 
   let delta = dx * DRAG_SCALE;
   let target = rotation + delta;
 
-  /* 基準からの相対角 */
   let diff = target - dragBaseRotation;
 
   /* ソフト制限 */
   if (Math.abs(diff) > FREE_LIMIT) {
     const t = (Math.abs(diff) - FREE_LIMIT) / (HARD_LIMIT - FREE_LIMIT);
-    const damp = Math.max(0.15, 1 - t);
-    delta *= damp;
+    delta *= Math.max(0.15, 1 - t);
     target = rotation + delta;
     diff = target - dragBaseRotation;
   }
@@ -168,7 +170,7 @@ card.addEventListener('touchmove',  onDrag,    { passive:true });
 card.addEventListener('touchend',   endDrag);
 
 /* =====================
-   iOS gesture 完全抑止
+   iOS gesture 抑止
 ===================== */
 document.addEventListener('gesturestart',  e => e.preventDefault());
 document.addEventListener('gesturechange', e => e.preventDefault());
