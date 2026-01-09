@@ -19,7 +19,7 @@ let mirrorActive = false;
 ====================== */
 const BASE_SPEED = 1.6;
 const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 88;
+const DRAG_LIMIT = 85;
 const FRONT_EPS  = 6;
 
 /* ======================
@@ -96,11 +96,11 @@ function onDrag(e){
 
   const currTotal = rotation + dragAngle;
 
-  // ⭐ ドラッグ中 & 正面 → 左に跨いだ瞬間だけ
+  // ⭐ 正面付近で「左に跨いだ瞬間」だけ
   mirrorActive =
     isFacingFront(prevTotal) &&
-    prevTotal >= 0 &&
-    currTotal < 0;
+    normalize(prevTotal) > 0 &&
+    normalize(currTotal) < 0;
 
   if(mirrorActive && navigator.vibrate){
     navigator.vibrate(8);
@@ -111,8 +111,11 @@ function endDrag(){
   isDragging = false;
   autoRotate = true;
 
+  // ★ ドラッグ結果を回転に反映
+  rotation += dragAngle;
   dragAngle = 0;
-  mirrorActive = false; // ← 強制解除（超重要）
+
+  mirrorActive = false;
 }
 
 /* ======================
