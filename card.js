@@ -1,38 +1,37 @@
-const card = document.getElementById('card');
-const frontMirror = document.querySelector('.front .mirror');
-const backMirror  = document.querySelector('.back .mirror');
-const frontArt    = document.querySelector('.front-art');
-const backArt     = document.querySelector('.back-art');
+const card  = document.getElementById('card');
+const front = document.querySelector('.front');
+const back  = document.querySelector('.back');
 
 /* ======================
    Config
 ====================== */
-const BASE_SPEED = 1.6;
-const DRAG_SCALE = 0.4;
+const BASE_SPEED = 1.4;
+const DRAG_SCALE = 0.35;
 const DRAG_LIMIT = 88;
-const FRONT_EPS  = 5;
+const FRONT_EPS  = 6;
 
 /* ======================
    State
 ====================== */
 let rotation   = 0;
-let autoRotate = true;
+let dragAngle  = 0;
 let isDragging = false;
+let autoRotate = true;
+let lastX      = 0;
 
-let lastX = 0;
-let dragAngle = 0;
-
-let mirrorFrame = false;
-let canMirror   = false;
+let mirrorActive = false;
 
 /* ======================
-   Image
+   Images（代用）
 ====================== */
-const params   = new URLSearchParams(location.search);
-const cardName = params.get('card') || 'king.of.spades';
+const FRONT_NORMAL = 'images/king.of.spades.png';
+const FRONT_MIRROR = 'images/joker1.png';
+const BACK_NORMAL  = 'images/zebra.png';
+const BACK_MIRROR  = 'images/joker2.png';
 
-frontArt.style.backgroundImage = `url(images/${cardName}.png)`;
-backArt.style.backgroundImage  = `url(images/zebra.png)`;
+/* 初期 */
+front.style.backgroundImage = `url(${FRONT_NORMAL})`;
+back.style.backgroundImage  = `url(${BACK_NORMAL})`;
 
 /* ======================
    Utils
@@ -56,21 +55,23 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  const scale = mirrorFrame ? -1 : 1;
-  frontMirror.style.transform = `scaleX(${scale})`;
-  backMirror.style.transform  = `scaleX(${scale})`;
+  /* ★ 反転は画像切り替えのみ */
+  if(mirrorActive){
+    front.style.backgroundImage = `url(${FRONT_MIRROR})`;
+    back.style.backgroundImage  = `url(${BACK_MIRROR})`;
+  }else{
+    front.style.backgroundImage = `url(${FRONT_NORMAL})`;
+    back.style.backgroundImage  = `url(${BACK_NORMAL})`;
+  }
 }
 
 /* ======================
    Animation
 ====================== */
 function animate(){
-  mirrorFrame = false;
-
   if(autoRotate && !isDragging){
     rotation += BASE_SPEED;
   }
-
   applyTransform();
   requestAnimationFrame(animate);
 }
@@ -82,28 +83,32 @@ animate();
 function startDrag(e){
   isDragging = true;
   autoRotate = false;
-
   lastX = getX(e);
   dragAngle = 0;
-
-  // 正面スタートかどうかだけ判定
-  canMirror = isFacingFront(rotation);
+  mirrorActive = false;
 }
 
 function onDrag(e){
   if(!isDragging) return;
 
-  const x = getX(e);
+  const x  = getX(e);
   const dx = x - lastX;
   lastX = x;
+
+  const prev = rotation + dragAngle;
 
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
 
-  // 正面 → 左に動いた瞬間だけ反転
-  if(canMirror && dx < 0){
-    mirrorFrame = true;
-    canMirror = false;
+  const curr = rotation + dragAngle;
+
+  /* ★ 正面 → 左に跨いだ瞬間のみ */
+  if(
+    isFacingFront(prev) &&
+    normalize(prev) > 0 &&
+    normalize(curr) < 0
+  ){
+    mirrorActive = true;
 
     if(navigator.vibrate){
       navigator.vibrate(8);
@@ -117,8 +122,7 @@ function endDrag(){
 
   rotation += dragAngle;
   dragAngle = 0;
-
-  mirrorFrame = false;
+  mirrorActive = false;   // ← 必ず解除
 }
 
 /* ======================
