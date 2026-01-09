@@ -54,6 +54,14 @@ function applyTransform(){
 
   front.style.setProperty('--shine-x', `${shineX}%`);
   back.style.setProperty('--shine-x', `${shineX}%`);
+  
+    // 常に visibility を visible にする
+  front.style.visibility = 'visible';
+  back.style.visibility  = 'visible';
+
+  front.style.transform = `rotateY(0deg)`;
+  back.style.transform  = `rotateY(180deg)`;
+}
 
   // 側面ヒステリシス判定
   if(!isBackVisible && angleMod>100 && angleMod<260){
