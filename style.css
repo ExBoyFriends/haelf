@@ -43,13 +43,9 @@ body {
   height: 100%;
   position: relative;
   transform-style: preserve-3d;
+  transform-origin: center center; /* ★追加 */
   will-change: transform;
   border-radius: 12px;
-
-  -webkit-user-select: none;
-  user-select: none;
-  -webkit-touch-callout: none;
-  touch-action: none;
 }
 
 /* =========================
@@ -58,9 +54,9 @@ body {
 .face {
   position: absolute;
   inset: 0;
-  width: 100%;
-  height: 100%;
   backface-visibility: hidden;
+  transform-style: preserve-3d; /* ★追加 */
+  will-change: transform;       /* ★推奨 */
 
   background-repeat: no-repeat;
   background-size: cover;
