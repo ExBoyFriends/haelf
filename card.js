@@ -59,8 +59,8 @@ function applyTransform(){
     front.style.transform = `rotateY(0deg) scaleX(-1)`;
     back.style.transform  = `rotateY(180deg) scaleX(-1)`;
   } else {
-    front.style.transform = `rotateY(0deg) scaleX(1)`;
-    back.style.transform  = `rotateY(180deg) scaleX(1)`;
+    front.style.transform = `rotateY(0deg)`;
+    back.style.transform  = `rotateY(180deg)`;
   }
 }
 
