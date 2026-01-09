@@ -6,7 +6,6 @@ html, body {
   touch-action: none;
   -webkit-user-select: none;
   user-select: none;
-  -webkit-touch-callout: none;
 }
 
 body {
@@ -28,6 +27,7 @@ body {
   position: relative;
   transform-style: preserve-3d;
   will-change: transform;
+  border-radius: 12px;
 }
 
 .face {
@@ -37,7 +37,6 @@ body {
   background-position: center;
   backface-visibility: hidden;
   border-radius: 12px;
-  pointer-events: none;
 }
 
 .back {
