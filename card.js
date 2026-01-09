@@ -13,12 +13,13 @@ const FRONT_EPS  = 6;
 /* ======================
    State
 ====================== */
-let rotation      = 0;
-let dragAngle     = 0;
-let isDragging    = false;
-let autoRotate    = true;
-let lastX         = 0;
-let mirrorActive  = false;
+let rotation   = 0;
+let dragAngle  = 0;
+let isDragging = false;
+let autoRotate = true;
+let lastX      = 0;
+
+let mirrorActive = false;
 
 /* ======================
    Images
@@ -28,7 +29,7 @@ const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/joker2.png';
 
-/* 初期表示 */
+/* 初期 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
 back.style.backgroundImage  = `url(${BACK_NORMAL})`;
 
@@ -43,18 +44,20 @@ function normalize(a){
   return ((a + 180) % 360) - 180;
 }
 
-function isFacingFront(angle){
-  return Math.abs(normalize(angle)) < FRONT_EPS;
+// 表も裏も正面とみなす
+function isFacing(angle){
+  const norm = normalize(angle);
+  return Math.abs(norm) < FRONT_EPS || Math.abs(norm - 180) < FRONT_EPS;
 }
 
 /* ======================
-   Transform適用
+   Transform
 ====================== */
 function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 反転は画像切替のみ
+  // 反転は画像切り替えのみ
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -102,19 +105,22 @@ function onDrag(e){
   const prevNorm = normalize(prev);
   const currNorm = normalize(curr);
 
-  // ★ 左に跨いだ瞬間だけ反転
-  if(Math.abs(prevNorm) < FRONT_EPS && prevNorm > 0 && currNorm < 0){
-    mirrorActive = true;
-    if(navigator.vibrate) navigator.vibrate(8);
+  // 左右どちらに跨いでも、表裏とも反転
+  if(isFacing(prev)){
+    if((prevNorm > 0 && currNorm < 0) || (prevNorm < 0 && currNorm > 0)){
+      mirrorActive = true;
+      if(navigator.vibrate) navigator.vibrate(8);
+    }
   }
 }
 
 function endDrag(){
   isDragging = false;
   autoRotate = true;
+
   rotation += dragAngle;
   dragAngle = 0;
-  mirrorActive = false; // ← 必ず解除
+  mirrorActive = false;   // 指離したら必ず解除
 }
 
 /* ======================
