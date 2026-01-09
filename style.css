@@ -39,6 +39,10 @@ background-position: 50% 50%;
   border-radius: 12px;
 }
 
+.scene {
+  perspective: 1000px;
+  overflow: visible;
+
 .front::after,
 .back::after {
   content: '';
