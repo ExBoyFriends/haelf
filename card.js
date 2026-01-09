@@ -5,19 +5,19 @@ const back  = document.querySelector('.back');
 /* ======================
    Config
 ====================== */
-const BASE_SPEED = 1.4;   // 自動回転速度
-const DRAG_SCALE  = 0.35; // ドラッグ角度換算
-const DRAG_LIMIT  = 88;   // 最大ドラッグ角度
-const FRONT_EPS   = 6;    // 正面判定の角度誤差
+const BASE_SPEED = 1.4;     // 自動回転速度
+const DRAG_SCALE = 0.35;    // ドラッグ→角度変換
+const DRAG_LIMIT = 88;      // 最大ドラッグ角度
+const FRONT_EPS  = 6;       // 正面判定誤差
 
 /* ======================
    State
 ====================== */
-let rotation    = 0;
-let dragAngle   = 0;
-let isDragging  = false;
-let autoRotate  = true;
-let lastX       = 0;
+let rotation   = 0;          // 自動回転角度
+let dragAngle  = 0;          // ドラッグ角度
+let isDragging = false;
+let autoRotate = true;
+let lastX      = 0;
 let mirrorActive = false;
 
 /* ======================
@@ -39,23 +39,24 @@ function getX(e){
   return e.touches ? e.touches[0].clientX : e.clientX;
 }
 
+// -180 ~ +180 に正規化
 function normalize(a){
   return ((a + 180) % 360) - 180;
 }
 
-/* 正面判定 */
+// 角度が正面かどうか
 function isFacingFront(angle){
   return Math.abs(normalize(angle)) < FRONT_EPS;
 }
 
 /* ======================
-   Transform 適用
+   Transform適用
 ====================== */
 function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 左傾き時は反転画像
+  // 左に傾いている間だけ反転画像
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -78,7 +79,7 @@ function animate(){
 animate();
 
 /* ======================
-   Drag操作
+   Drag
 ====================== */
 function startDrag(e){
   isDragging = true;
@@ -98,11 +99,16 @@ function onDrag(e){
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
 
-  // 左傾きなら常に反転
-  mirrorActive = normalize(rotation + dragAngle) < 0;
+  const total = rotation + dragAngle;
 
-  if(mirrorActive && navigator.vibrate){
-    navigator.vibrate(8); // 軽く触覚
+  // 左に傾いている間は常に反転画像
+  if(normalize(total) < 0){
+    if(!mirrorActive && navigator.vibrate){
+      navigator.vibrate(8);
+    }
+    mirrorActive = true;
+  } else {
+    mirrorActive = false;
   }
 }
 
@@ -111,13 +117,11 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-
-  // 指離したら必ず元に戻す
-  mirrorActive = false;
+  mirrorActive = false; // 指離したら必ず解除
 }
 
 /* ======================
-   イベント登録
+   Events
 ====================== */
 card.addEventListener('mousedown', startDrag);
 window.addEventListener('mousemove', onDrag);
@@ -128,14 +132,13 @@ card.addEventListener('touchmove',  onDrag,    { passive:true });
 card.addEventListener('touchend',   endDrag);
 
 /* ======================
-   iOS/スマホ対応：長押しやズーム防止
+   長押し禁止
 ====================== */
 document.addEventListener('gesturestart', e => e.preventDefault());
 document.addEventListener('gesturechange', e => e.preventDefault());
 document.addEventListener('gestureend', e => e.preventDefault());
-
 let touchTimer = null;
 document.addEventListener('touchstart', e => {
   touchTimer = setTimeout(() => { e.preventDefault(); }, 300);
-}, { passive: false });
+}, { passive:false });
 document.addEventListener('touchend', () => clearTimeout(touchTimer));
