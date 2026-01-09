@@ -12,6 +12,8 @@ let isDragging = false;
 let lastX = 0;
 let dragAngle = 0;
 
+let mirrorFrame = false; // ← 一瞬だけ true
+
 /* ======================
    Config
 ====================== */
@@ -48,16 +50,24 @@ function isFacingFront(angle){
    Transform
 ====================== */
 function applyTransform(){
-  card.style.transform = `rotateY(${rotation + dragAngle}deg)`;
+  const total = rotation + dragAngle;
+  card.style.transform = `rotateY(${total}deg)`;
+
+  // ★ 反転は front だけ・一瞬
+  front.style.transform = mirrorFrame ? 'scaleX(-1)' : 'scaleX(1)';
+  back.style.transform  = 'rotateY(180deg)';
 }
 
 /* ======================
    Animation
 ====================== */
 function animate(){
+  mirrorFrame = false; // ← 毎フレーム解除
+
   if(autoRotate && !isDragging){
     rotation += BASE_SPEED;
   }
+
   applyTransform();
   requestAnimationFrame(animate);
 }
@@ -88,14 +98,13 @@ function onDrag(e){
 
   const curr = rotation + dragAngle;
 
-  // ⭐ 正面で「左に跨いだ瞬間」
+  // ⭐ 正面から左に跨いだ「瞬間だけ」
   if(
     isFacingFront(prev) &&
     normalize(prev) > 0 &&
     normalize(curr) < 0
   ){
-    rotation += 180;        // ← ここが「反転」
-    dragAngle = 0;
+    mirrorFrame = true;
 
     if(navigator.vibrate){
       navigator.vibrate(8);
@@ -107,7 +116,7 @@ function endDrag(){
   isDragging = false;
   autoRotate = true;
 
-  rotation += dragAngle; // ← 戻らない
+  rotation += dragAngle;
   dragAngle = 0;
 }
 
