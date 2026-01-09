@@ -8,7 +8,6 @@ const back  = document.querySelector('.back');
 const BASE_SPEED = 1.4;
 const DRAG_SCALE = 0.35;
 const DRAG_LIMIT = 88;
-const FRONT_EPS  = 6;
 
 /* ======================
    State
@@ -28,7 +27,7 @@ const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/joker2.png';
 
-/* 初期表示 */
+/* 初期 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
 back.style.backgroundImage  = `url(${BACK_NORMAL})`;
 
@@ -43,8 +42,11 @@ function normalize(a){
   return ((a + 180) % 360) - 180;
 }
 
-function isFacingFront(angle){
-  return Math.abs(normalize(angle)) < FRONT_EPS;
+// 裏表どちらでも「正面向き」を検知
+function getVisibleAngle(){
+  const total = rotation + dragAngle;
+  // 表が見える範囲 [-90,90] を正面として扱う
+  return (normalize(total) <= 90 && normalize(total) >= -90) ? normalize(total) : normalize(total - 180);
 }
 
 /* ======================
@@ -54,7 +56,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 正面から左に傾けた時だけ反転画像に切り替え
+  // 反転は画像切替のみ
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -94,21 +96,21 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
-  const prev = rotation + dragAngle;
+  const prevVisible = getVisibleAngle();
+
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
-  const curr = rotation + dragAngle;
 
-  // ★ 正面から左に傾けた瞬間だけ反転
-  if(isFacingFront(prev) && normalize(prev) >= 0 && normalize(curr) < 0){
+  const currVisible = getVisibleAngle();
+
+  // ★ 真正面から左に傾けた瞬間だけ反転
+  if(prevVisible >= 0 && currVisible < 0){
     mirrorActive = true;
-    if(navigator.vibrate){
-      navigator.vibrate(8);
-    }
+    if(navigator.vibrate) navigator.vibrate(8);
   }
 
-  // ★ 正面から右に戻ったら即解除
-  if(normalize(rotation + dragAngle) > 0){
+  // ★ 真正面より右に戻ったら即解除
+  if(currVisible > 0){
     mirrorActive = false;
   }
 }
@@ -118,7 +120,9 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-  mirrorActive = false; // 指離したら必ず解除
+
+  // 指を離したら必ず解除
+  mirrorActive = false;
 }
 
 /* ======================
