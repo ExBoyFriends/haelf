@@ -6,9 +6,9 @@ const back  = document.querySelector('.back');
    Config
 ====================== */
 const BASE_SPEED = 1.4;
-const DRAG_SCALE = 0.35;     // 感度
-const DRAG_LIMIT = 30;       // ±30°に狭めた
-
+const DRAG_SCALE = 0.35;
+const DRAG_LIMIT = 60; // 中心から±60°
+ 
 /* ======================
    State
 ====================== */
@@ -74,6 +74,7 @@ function startDrag(e){
   isDragging = true;
   autoRotate = false;
   lastX = getX(e);
+  dragAngle = 0;
   mirrorActive = false;
 }
 
@@ -84,7 +85,7 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
-  // ドラッグ範囲制御
+  // 中心基準 ±DRAG_LIMIT の範囲チェック
   let nextDrag = dragAngle + dx * DRAG_SCALE;
   if(nextDrag > DRAG_LIMIT) nextDrag = DRAG_LIMIT;
   if(nextDrag < -DRAG_LIMIT) nextDrag = -DRAG_LIMIT;
@@ -93,7 +94,7 @@ function onDrag(e){
   const total = rotation + dragAngle;
   const normalized = normalize(total);
 
-  // 裏も表も左傾き時だけ反転
+  // 裏も表も左傾き時のみ反転
   const isBack = normalized > 90 || normalized < -90;
   const angleForMirror = isBack ? normalize(total - 180) : normalized;
   mirrorActive = angleForMirror < 0;
