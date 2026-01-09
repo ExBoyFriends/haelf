@@ -25,7 +25,7 @@ const BASE_SPEED  = 1.6;
    URLパラメータ
 ====================== */
 const params   = new URLSearchParams(location.search);
-const cardName = params.get('card') || 'king';
+const cardName = params.get('card') || 'king.of.spades';
 
 front.style.backgroundImage = `url(images/${cardName}.png)`;
 back.style.backgroundImage  = `url(images/zebra.png)`;
