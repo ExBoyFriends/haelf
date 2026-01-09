@@ -145,4 +145,15 @@ document.addEventListener(
   { passive: false }
 );
 
+let touchTimer = null;
+
+document.addEventListener('touchstart', e => {
+  touchTimer = setTimeout(() => {
+    e.preventDefault();
+  }, 300);
+}, { passive: false });
+
+document.addEventListener('touchend', () => {
+  clearTimeout(touchTimer);
+});
 
