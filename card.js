@@ -132,7 +132,7 @@ document.addEventListener('gestureend', e => {
 });
 
 // ダブルタップズーム防止
-let lastTouchEnd = 0;
+//let lastTouchEnd = 0;
 document.addEventListener(
   'touchend',
   e => {
