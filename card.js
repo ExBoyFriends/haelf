@@ -1,4 +1,3 @@
-// card.js
 const card  = document.getElementById('card');
 const front = document.querySelector('.front');
 const back  = document.querySelector('.back');
@@ -19,6 +18,7 @@ let dragAngle  = 0;
 let isDragging = false;
 let autoRotate = true;
 let lastX      = 0;
+
 let mirrorActive = false;
 
 /* ======================
@@ -29,7 +29,7 @@ const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/joker2.png';
 
-/* 初期 */
+/* 初期画像設定 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
 back.style.backgroundImage  = `url(${BACK_NORMAL})`;
 
@@ -55,8 +55,8 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 左に傾いているときだけ反転画像
-  if(dragAngle < 0 && isDragging){
+  // 左に傾いている間だけ反転用画像に切り替え
+  if(normalize(total) < 0 && isDragging){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
   } else {
@@ -81,10 +81,12 @@ animate();
    Drag
 ====================== */
 function startDrag(e){
+  e.preventDefault(); // ← 長押し禁止
   isDragging = true;
   autoRotate = false;
   lastX = getX(e);
   dragAngle = 0;
+  mirrorActive = false;
 }
 
 function onDrag(e){
@@ -98,11 +100,14 @@ function onDrag(e){
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
 }
 
-function endDrag(){
+function endDrag(e){
   isDragging = false;
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
+
+  // 指を離したら必ず元に戻す
+  mirrorActive = false;
 }
 
 /* ======================
@@ -112,6 +117,6 @@ card.addEventListener('mousedown', startDrag);
 window.addEventListener('mousemove', onDrag);
 window.addEventListener('mouseup', endDrag);
 
-card.addEventListener('touchstart', startDrag, { passive:true });
-card.addEventListener('touchmove',  onDrag,    { passive:true });
+card.addEventListener('touchstart', startDrag, { passive:false });
+card.addEventListener('touchmove',  onDrag,    { passive:false });
 card.addEventListener('touchend',   endDrag);
