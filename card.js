@@ -7,7 +7,7 @@ const back  = document.querySelector('.back');
 ====================== */
 const BASE_SPEED = 1.4;
 const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 56; // ±56度のドラッグ範囲
+const DRAG_LIMIT = 60; // 中心基準 ±60° が最大ドラッグ範囲
 
 /* ======================
    State
@@ -27,7 +27,6 @@ const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/joker2.png';
 
-/* 初期 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
 back.style.backgroundImage  = `url(${BACK_NORMAL})`;
 
@@ -44,7 +43,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 左に傾いている時だけ反転画像、指離すと元に戻る
+  // 左傾き時のみ反転画像、指離すと元に戻る
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -72,13 +71,12 @@ animate();
 function startDrag(e){
   const x = getX(e);
 
-  // 現在の角度を取得
   const total = rotation;
   const normalized = normalize(total);
   const isBack = normalized > 90 || normalized < -90;
   const angleFromCenter = isBack ? normalize(total - 180) : normalized;
 
-  // 範囲外ならドラッグ開始せず、自動回転は続く
+  // 範囲外ならドラッグ開始せず、自動回転は継続
   if(angleFromCenter > DRAG_LIMIT || angleFromCenter < -DRAG_LIMIT){
     return;
   }
@@ -100,17 +98,21 @@ function onDrag(e){
 
   dragAngle += dx * DRAG_SCALE;
 
-  // カード中心基準で左右 ±DRAG_LIMIT に制限
-  if(dragAngle > DRAG_LIMIT) dragAngle = DRAG_LIMIT;
-  if(dragAngle < -DRAG_LIMIT) dragAngle = -DRAG_LIMIT;
-
   const total = rotation + dragAngle;
   const normalized = normalize(total);
 
-  // 表裏共通で左に傾いているときだけ反転
+  // 表裏共通で左傾き時だけ反転
   const isBack = normalized > 90 || normalized < -90;
   const angleForMirror = isBack ? normalize(total - 180) : normalized;
   mirrorActive = angleForMirror < 0;
+
+  // ------- 左右非対称ドラッグ制御 -------
+  // 左に傾くと右が狭く、左が広く
+  // 右に傾くと左が狭く、右が広く
+  const leftLimit  = -DRAG_LIMIT - rotation; // 左側最大
+  const rightLimit =  DRAG_LIMIT - rotation; // 右側最大
+  if(dragAngle < leftLimit)  dragAngle = leftLimit;
+  if(dragAngle > rightLimit) dragAngle = rightLimit;
 }
 
 function endDrag(){
