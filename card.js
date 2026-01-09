@@ -2,6 +2,17 @@ const card  = document.getElementById('card');
 const front = document.querySelector('.front');
 const back  = document.querySelector('.back');
 
+/* ダブルタップズーム防止（iOS Safari対策） */
+let lastTouchEnd = 0;
+
+document.addEventListener('touchend', (e) => {
+  const now = Date.now();
+  if (now - lastTouchEnd <= 300) {
+    e.preventDefault();
+  }
+  lastTouchEnd = now;
+}, { passive: false });
+
 let rotation   = 0;
 let autoRotate = true;
 let isDragging = false;
