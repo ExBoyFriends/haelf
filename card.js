@@ -27,7 +27,7 @@ let mirrorActive = false;
 const FRONT_NORMAL = 'images/king.of.spades.png';
 const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
-const BACK_MIRROR  = 'images/joker2.png';
+const BACK_MIRROR  = 'images/joker1.png';
 
 /* 初期 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
