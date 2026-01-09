@@ -1,6 +1,8 @@
-const card  = document.getElementById('card');
-const frontArt = document.querySelector('.front-art');
-const backArt  = document.querySelector('.back-art');
+const card = document.getElementById('card');
+const frontMirror = document.querySelector('.front .mirror');
+const backMirror  = document.querySelector('.back .mirror');
+const frontArt    = document.querySelector('.front-art');
+const backArt     = document.querySelector('.back-art');
 
 /* ======================
    Config
@@ -55,8 +57,8 @@ function applyTransform(){
   card.style.transform = `rotateY(${total}deg)`;
 
   const scale = mirrorFrame ? -1 : 1;
-  frontArt.style.transform = `scaleX(${scale})`;
-  backArt.style.transform  = `scaleX(${scale})`;
+  frontMirror.style.transform = `scaleX(${scale})`;
+  backMirror.style.transform  = `scaleX(${scale})`;
 }
 
 /* ======================
@@ -84,7 +86,7 @@ function startDrag(e){
   lastX = getX(e);
   dragAngle = 0;
 
-  // ★ 正面スタートかどうかだけを見る
+  // 正面スタートかどうかだけ判定
   canMirror = isFacingFront(rotation);
 }
 
@@ -98,7 +100,7 @@ function onDrag(e){
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
 
-  // ★ 正面から左に動いた「瞬間」
+  // 正面 → 左に動いた瞬間だけ反転
   if(canMirror && dx < 0){
     mirrorFrame = true;
     canMirror = false;
