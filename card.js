@@ -5,19 +5,19 @@ const back  = document.querySelector('.back');
 /* ======================
    Config
 ====================== */
-const BASE_SPEED = 1.4;       // 自動回転速度
-const DRAG_SCALE = 0.35;      // ドラッグの角度変換倍率
-const DRAG_LIMIT = 88;        // 左右最大ドラッグ角度
+const BASE_SPEED = 1.4;
+const DRAG_SCALE = 0.35;
+const DRAG_LIMIT = 88;
 
 /* ======================
    State
 ====================== */
-let rotation     = 0;          // 自動回転角度
-let dragAngle    = 0;          // 手動ドラッグ角度
-let isDragging   = false;      // ドラッグ中フラグ
-let autoRotate   = true;       // 自動回転フラグ
-let lastX        = 0;          // 前回X座標
-let mirrorActive = false;      // 左傾き反転用フラグ
+let rotation     = 0;
+let dragAngle    = 0;
+let isDragging   = false;
+let autoRotate   = true;
+let lastX        = 0;
+let mirrorActive = false;
 
 /* ======================
    Images
@@ -27,7 +27,7 @@ const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/joker2.png';
 
-/* 初期画像 */
+/* 初期 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
 back.style.backgroundImage  = `url(${BACK_NORMAL})`;
 
@@ -44,7 +44,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 左に傾いている間だけ反転画像
+  // 左に傾いている時だけ反転画像、指離すと元に戻る
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -85,18 +85,17 @@ function onDrag(e){
   lastX = x;
 
   dragAngle += dx * DRAG_SCALE;
+  dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
 
-  // 裏表関係なく、中心基準で左右制限
-  let total = rotation + dragAngle;
-  if(total > DRAG_LIMIT) dragAngle -= total - DRAG_LIMIT;
-  if(total < -DRAG_LIMIT) dragAngle -= total + DRAG_LIMIT;
+  const total = rotation + dragAngle;
+  const normalized = normalize(total);
 
-  total = rotation + dragAngle;
+  // 裏面も表面も共通で左傾き時のみ反転
+  const isBack = normalized > 90 || normalized < -90;
+  const angleForMirror = isBack ? normalize(total - 180) : normalized;
 
-  // 左に傾いている間だけ反転
-  mirrorActive = total < 0;
+  mirrorActive = angleForMirror < 0;
 
-  // 触覚（クリッ）効果
   if(mirrorActive && navigator.vibrate){
     navigator.vibrate(8);
   }
@@ -107,9 +106,7 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-
-  // 指を離したら必ず元に戻す
-  mirrorActive = false;
+  mirrorActive = false; // 指離したら即戻す
 }
 
 /* ======================
@@ -122,10 +119,6 @@ window.addEventListener('mouseup', endDrag);
 card.addEventListener('touchstart', startDrag, { passive:true });
 card.addEventListener('touchmove',  onDrag,    { passive:true });
 card.addEventListener('touchend',   endDrag);
+
 // 長押し禁止
 card.addEventListener('contextmenu', e => e.preventDefault());
-
-// ダブルタップやピンチによるズームも禁止
-document.addEventListener('gesturestart', e => e.preventDefault());
-document.addEventListener('gesturechange', e => e.preventDefault());
-document.addEventListener('gestureend', e => e.preventDefault());
