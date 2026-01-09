@@ -18,6 +18,7 @@ let isDragging   = false;
 let autoRotate   = true;
 let lastX        = 0;
 let mirrorActive = false;
+let lastVibrate  = false;
 
 /* ======================
    Images
@@ -44,7 +45,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 左に傾いている時だけ反転画像、指離すと元に戻る
+  // 左傾き時だけ反転画像、指離すと元に戻る
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -75,6 +76,7 @@ function startDrag(e){
   lastX = getX(e);
   dragAngle = 0;
   mirrorActive = false;
+  lastVibrate = false;
 }
 
 function onDrag(e){
@@ -84,20 +86,28 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
+  // ドラッグ角度の制御
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
 
   const total = rotation + dragAngle;
   const normalized = normalize(total);
 
-  // 裏面も表面も共通で左傾き時のみ反転
+  // 裏面補正
   const isBack = normalized > 90 || normalized < -90;
   const angleForMirror = isBack ? normalize(total - 180) : normalized;
 
+  // 左傾き時のみ反転
   mirrorActive = angleForMirror < 0;
 
-  if(mirrorActive && navigator.vibrate){
-    navigator.vibrate(8);
+  // 触覚：中心を通過する瞬間だけ
+  if(!lastVibrate && Math.abs(angleForMirror) < 0.5){
+    if(navigator.vibrate){
+      navigator.vibrate(10); // 軽くクリッと
+    }
+    lastVibrate = true;
+  } else if(Math.abs(angleForMirror) >= 0.5){
+    lastVibrate = false;
   }
 }
 
@@ -106,7 +116,7 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-  mirrorActive = false; // 指離したら即戻す
+  mirrorActive = false; // 指離したら即戻る
 }
 
 /* ======================
