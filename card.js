@@ -18,7 +18,6 @@ let dragAngle  = 0;
 let isDragging = false;
 let autoRotate = true;
 let lastX      = 0;
-
 let mirrorActive = false;
 
 /* ======================
@@ -29,7 +28,7 @@ const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/joker2.png';
 
-/* 初期 */
+/* 初期表示 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
 back.style.backgroundImage  = `url(${BACK_NORMAL})`;
 
@@ -55,7 +54,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 正面から左に傾いたときだけ切り替え
+  // 正面から左に傾けた時だけ反転画像に切り替え
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -100,7 +99,7 @@ function onDrag(e){
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
   const curr = rotation + dragAngle;
 
-  // ★ 正面から左に跨いだ瞬間だけ切り替え
+  // ★ 正面から左に傾けた瞬間だけ反転
   if(isFacingFront(prev) && normalize(prev) >= 0 && normalize(curr) < 0){
     mirrorActive = true;
     if(navigator.vibrate){
@@ -108,7 +107,7 @@ function onDrag(e){
     }
   }
 
-  // ★ 右に戻ったら即解除
+  // ★ 正面から右に戻ったら即解除
   if(normalize(rotation + dragAngle) > 0){
     mirrorActive = false;
   }
@@ -119,9 +118,7 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-
-  // 指離したら必ず解除
-  mirrorActive = false;
+  mirrorActive = false; // 指離したら必ず解除
 }
 
 /* ======================
