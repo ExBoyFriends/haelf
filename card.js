@@ -24,7 +24,10 @@ let mirrorActive = false;
 /* ======================
    Images（代用）
 ====================== */
-const FRONT_NORMAL = 'images/king.of.spades.png';
+const params   = new URLSearchParams(location.search);
+const cardName = params.get('card') || 'king.of.spades';
+
+const FRONT_NORMAL = `images/${cardName}.png`;
 const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/joker2.png';
