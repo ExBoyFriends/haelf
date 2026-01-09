@@ -4,12 +4,9 @@ const back  = document.querySelector('.back');
 
 /* ダブルタップズーム防止（iOS Safari対策） */
 let lastTouchEnd = 0;
-
 document.addEventListener('touchend', (e) => {
   const now = Date.now();
-  if (now - lastTouchEnd <= 300) {
-    e.preventDefault();
-  }
+  if (now - lastTouchEnd <= 300) e.preventDefault();
   lastTouchEnd = now;
 }, { passive: false });
 
@@ -25,7 +22,6 @@ let spinBoost = 0;
 let manualCenter = 0;
 
 const DRAG_LIMIT  = 60;
-const SIDE_MARGIN = 60;
 const BASE_SPEED  = 1.6;
 
 /* URL */
@@ -35,16 +31,16 @@ const cardName = params.get('card') || 'king.of.spades';
 front.style.backgroundImage = `url(images/${cardName}.png)`;
 back.style.backgroundImage  = `url(images/zebra.png)`;
 
-function getX(e){
-  return e.touches ? e.touches[0].clientX : e.clientX;
-}
-
+/* -------------------------
+   Transform 適用
+------------------------- */
 function applyTransform(){
   card.style.transform = `rotateY(${rotation}deg)`;
 
   const rad = rotation * Math.PI / 180;
   const angleMod = ((rotation % 360) + 360) % 360;
 
+  // 光の演出
   const sideDiff = Math.min(Math.abs(angleMod % 180 - 90) / 90, 1);
   const brightness = 0.95 + (1 - sideDiff) * 0.1;
   const shineX = Math.sin(rad) * 30;
@@ -55,15 +51,14 @@ function applyTransform(){
   front.style.setProperty('--shine-x', `${shineX}%`);
   back.style.setProperty('--shine-x',  `${shineX}%`);
 
-  if(rotation - manualCenter < 0){
-    front.style.transform = `rotateY(0deg) scaleX(-1)`;
-    back.style.transform  = `rotateY(180deg) scaleX(-1)`;
-  } else {
-    front.style.transform = `rotateY(0deg)`;
-    back.style.transform  = `rotateY(180deg)`;
-  }
+  // scaleXを廃止 → フロント消失防止
+  front.style.transform = `rotateY(0deg)`;
+  back.style.transform  = `rotateY(180deg)`;
 }
 
+/* -------------------------
+   アニメーション
+------------------------- */
 function animate(){
   if(autoRotate && !isDragging && !returning){
     rotation += BASE_SPEED + spinBoost;
@@ -73,6 +68,11 @@ function animate(){
   requestAnimationFrame(animate);
 }
 animate();
+
+/* -------------------------
+   ドラッグ操作
+------------------------- */
+function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
 
 function startDrag(e){
   lastX = getX(e);
@@ -87,7 +87,6 @@ function startDrag(e){
 
 function onDrag(e){
   if(!isDragging) return;
-
   const now = performance.now();
   const x  = getX(e);
   const dx = x - lastX;
@@ -102,12 +101,13 @@ function onDrag(e){
 
 function endDrag(){
   isDragging = false;
-  if(Math.abs(velocity) > 0.6){
-    spinBoost = velocity * 120;
-  }
+  if(Math.abs(velocity) > 0.6) spinBoost = velocity * 120;
   autoRotate = true;
 }
 
+/* -------------------------
+   イベント
+------------------------- */
 card.addEventListener('mousedown', startDrag);
 window.addEventListener('mousemove', onDrag);
 window.addEventListener('mouseup',   endDrag);
@@ -119,41 +119,12 @@ card.addEventListener('touchend',   endDrag);
 /* ======================
    iOSズーム完全防止
 ====================== */
-
-// ピンチズーム防止（iOS Safari）
-document.addEventListener('gesturestart', e => {
-  e.preventDefault();
-});
-document.addEventListener('gesturechange', e => {
-  e.preventDefault();
-});
-document.addEventListener('gestureend', e => {
-  e.preventDefault();
-});
-
-// ダブルタップズーム防止
-//let lastTouchEnd = 0;
-document.addEventListener(
-  'touchend',
-  e => {
-    const now = Date.now();
-    if (now - lastTouchEnd <= 300) {
-      e.preventDefault();
-    }
-    lastTouchEnd = now;
-  },
-  { passive: false }
-);
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+document.addEventListener('gestureend', e => e.preventDefault());
 
 let touchTimer = null;
-
 document.addEventListener('touchstart', e => {
-  touchTimer = setTimeout(() => {
-    e.preventDefault();
-  }, 300);
+  touchTimer = setTimeout(() => { e.preventDefault(); }, 300);
 }, { passive: false });
-
-document.addEventListener('touchend', () => {
-  clearTimeout(touchTimer);
-});
-
+document.addEventListener('touchend', () => clearTimeout(touchTimer));
