@@ -123,3 +123,8 @@ card.addEventListener('touchend',   endDrag);
 
 // 長押し禁止
 card.addEventListener('contextmenu', e => e.preventDefault());
+
+// ダブルタップやピンチによるズームも禁止
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+document.addEventListener('gestureend', e => e.preventDefault());
