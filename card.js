@@ -7,8 +7,8 @@ const back  = document.querySelector('.back');
 ====================== */
 const BASE_SPEED = 1.4;   // 自動回転速度
 const DRAG_SCALE = 0.35;  // ドラッグ角度変換倍率
-const DRAG_LIMIT = 88;    // ドラッグ制限（側面手前まで）
-const FRONT_EPS  = 6;     // 正面判定誤差
+const DRAG_LIMIT = 88;    // 側面手前までの制限
+const FRONT_EPS  = 6;     // 正面と判定する範囲（度数）
 
 /* ======================
    State
@@ -19,8 +19,7 @@ let isDragging = false;
 let autoRotate = true;
 let lastX      = 0;
 
-let mirrorActive = false; // 左に傾けたときだけ切替
-let prevTotal = 0;        // 前フレームの合計角度
+let mirrorActive = false; // 左傾き中に切り替え中か
 
 /* ======================
    Images
@@ -56,7 +55,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // ★ 左傾き（正面を跨いだ）だけ切替
+  // 左に傾いていて、かつ指を押している間だけ反転画像
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -70,13 +69,10 @@ function applyTransform(){
    Animation
 ====================== */
 function animate(){
-  // 自動回転
   if(autoRotate && !isDragging){
     rotation += BASE_SPEED;
   }
-
   applyTransform();
-  prevTotal = rotation + dragAngle;
   requestAnimationFrame(animate);
 }
 animate();
@@ -99,13 +95,11 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
-  const totalPrev = rotation + dragAngle;
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
-  const totalCurr = rotation + dragAngle;
 
-  // ★ 左に傾いたら切替（正面を跨いだ瞬間だけでなく、左→正面の途中でもON）
-  if(normalize(totalCurr) < 0){
+  // ★ 左に傾いた時だけ反転
+  if(normalize(rotation + dragAngle) < 0){
     mirrorActive = true;
   } else {
     mirrorActive = false;
@@ -115,9 +109,13 @@ function onDrag(e){
 function endDrag(){
   isDragging = false;
   autoRotate = true;
+
+  // ドラッグ分は rotation に加算して確定
   rotation += dragAngle;
   dragAngle = 0;
-  mirrorActive = false; // 指離したら解除
+
+  // ★ 指を離したら必ず反転解除
+  mirrorActive = false;
 }
 
 /* ======================
