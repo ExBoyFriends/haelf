@@ -5,14 +5,12 @@ const back  = document.querySelector('.back');
 /* ======================
    State
 ====================== */
-let rotation   = 0;
+let rotation = 0;
 let autoRotate = true;
 let isDragging = false;
 
 let lastX = 0;
 let dragAngle = 0;
-
-let mirrorActive = false;
 
 /* ======================
    Config
@@ -20,7 +18,7 @@ let mirrorActive = false;
 const BASE_SPEED = 1.6;
 const DRAG_SCALE = 0.35;
 const DRAG_LIMIT = 85;
-const FRONT_EPS  = 6;
+const FRONT_EPS  = 5;
 
 /* ======================
    Image
@@ -50,12 +48,7 @@ function isFacingFront(angle){
    Transform
 ====================== */
 function applyTransform(){
-  const total = rotation + dragAngle;
-  card.style.transform = `rotateY(${total}deg)`;
-
-  const mirror = mirrorActive ? -1 : 1;
-  front.style.transform = `rotateY(0deg) scaleX(${mirror})`;
-  back.style.transform  = `rotateY(180deg) scaleX(${mirror})`;
+  card.style.transform = `rotateY(${rotation + dragAngle}deg)`;
 }
 
 /* ======================
@@ -79,7 +72,6 @@ function startDrag(e){
 
   lastX = getX(e);
   dragAngle = 0;
-  mirrorActive = false;
 }
 
 function onDrag(e){
@@ -89,21 +81,25 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
-  const prevTotal = rotation + dragAngle;
+  const prev = rotation + dragAngle;
 
   dragAngle += dx * DRAG_SCALE;
   dragAngle = Math.max(-DRAG_LIMIT, Math.min(DRAG_LIMIT, dragAngle));
 
-  const currTotal = rotation + dragAngle;
+  const curr = rotation + dragAngle;
 
-  // ⭐ 正面付近で「左に跨いだ瞬間」だけ
-  mirrorActive =
-    isFacingFront(prevTotal) &&
-    normalize(prevTotal) > 0 &&
-    normalize(currTotal) < 0;
+  // ⭐ 正面で「左に跨いだ瞬間」
+  if(
+    isFacingFront(prev) &&
+    normalize(prev) > 0 &&
+    normalize(curr) < 0
+  ){
+    rotation += 180;        // ← ここが「反転」
+    dragAngle = 0;
 
-  if(mirrorActive && navigator.vibrate){
-    navigator.vibrate(8);
+    if(navigator.vibrate){
+      navigator.vibrate(8);
+    }
   }
 }
 
@@ -111,11 +107,8 @@ function endDrag(){
   isDragging = false;
   autoRotate = true;
 
-  // ★ ドラッグ結果を回転に反映
-  rotation += dragAngle;
+  rotation += dragAngle; // ← 戻らない
   dragAngle = 0;
-
-  mirrorActive = false;
 }
 
 /* ======================
