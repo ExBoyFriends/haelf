@@ -44,13 +44,11 @@ function applyTransform(){
   front.style.setProperty('--shine-x', `${shineX}%`);
   back.style.setProperty('--shine-x',  `${shineX}%`);
 
-  if(rotation - manualCenter < 0){
-    front.style.transform = `rotateY(0deg) scaleX(-1)`;
-    back.style.transform  = `rotateY(180deg) scaleX(-1)`;
-  } else {
-    front.style.transform = `rotateY(0deg) scaleX(1)`;
-    back.style.transform  = `rotateY(180deg) scaleX(1)`;
-  }
+　　if(rotation - manualCenter < 0){
+    card.classList.add('mirror');
+　　} else {
+    card.classList.remove('mirror');
+　　}
 }
 
 function animate(){
