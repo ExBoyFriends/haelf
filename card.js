@@ -1,4 +1,4 @@
-/const card  = document.getElementById('card');
+const card  = document.getElementById('card');
 const front = document.querySelector('.front');
 const back  = document.querySelector('.back');
 
@@ -18,7 +18,6 @@ let isDragging   = false;      // ドラッグ中フラグ
 let autoRotate   = true;       // 自動回転フラグ
 let lastX        = 0;          // 前回X座標
 let mirrorActive = false;      // 左傾き反転用フラグ
-let vibrated     = false;      // 触覚用フラグ
 
 /* ======================
    Images
@@ -87,25 +86,19 @@ function onDrag(e){
 
   dragAngle += dx * DRAG_SCALE;
 
-  // 中心基準で左右制限
-  if(rotation + dragAngle > DRAG_LIMIT) dragAngle = DRAG_LIMIT - rotation;
-  if(rotation + dragAngle < -DRAG_LIMIT) dragAngle = -DRAG_LIMIT - rotation;
+  // 裏表関係なく、中心基準で左右制限
+  let total = rotation + dragAngle;
+  if(total > DRAG_LIMIT) dragAngle -= total - DRAG_LIMIT;
+  if(total < -DRAG_LIMIT) dragAngle -= total + DRAG_LIMIT;
 
-  const total = rotation + dragAngle;
+  total = rotation + dragAngle;
 
   // 左に傾いている間だけ反転
   mirrorActive = total < 0;
 
-  // 反転フラグと触覚
-  if(currentlyLeft && !mirrorActive){
-    mirrorActive = true;
-    if(navigator.vibrate && !vibrated){
-      navigator.vibrate(8);
-      vibrated = true; // 一度だけ
-    }
-  } else if(!currentlyLeft && mirrorActive){
-    mirrorActive = false;
-    vibrated = false;
+  // 触覚（クリッ）効果
+  if(mirrorActive && navigator.vibrate){
+    navigator.vibrate(8);
   }
 }
 
@@ -128,8 +121,7 @@ window.addEventListener('mouseup', endDrag);
 
 card.addEventListener('touchstart', startDrag, { passive:true });
 card.addEventListener('touchmove',  onDrag,    { passive:true });
-card.addEventListener('touchend',   endDrag);Drag);
-
+card.addEventListener('touchend',   endDrag);
 // 長押し禁止
 card.addEventListener('contextmenu', e => e.preventDefault());
 
