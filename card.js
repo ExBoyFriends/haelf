@@ -3,7 +3,7 @@ const front = document.querySelector('.front');
 const back  = document.querySelector('.back');
 
 /* ======================
-   基本状態
+   State
 ====================== */
 let rotation   = 0;
 let autoRotate = true;
@@ -14,13 +14,16 @@ let dragAngle = 0;
 
 let mirrorActive = false;
 
+/* ======================
+   Config
+====================== */
 const BASE_SPEED = 1.6;
 const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 88;   // 側面直前までOK
-const FRONT_EPS  = 6;    // 正面判定
+const DRAG_LIMIT = 88;
+const FRONT_EPS  = 6;
 
 /* ======================
-   画像
+   Image
 ====================== */
 const params   = new URLSearchParams(location.search);
 const cardName = params.get('card') || 'king.of.spades';
@@ -71,11 +74,12 @@ animate();
    Drag
 ====================== */
 function startDrag(e){
-  autoRotate = false;
   isDragging = true;
+  autoRotate = false;
+
+  lastX = getX(e);
   dragAngle = 0;
   mirrorActive = false;
-  lastX = getX(e);
 }
 
 function onDrag(e){
@@ -92,22 +96,23 @@ function onDrag(e){
 
   const currTotal = rotation + dragAngle;
 
-  // ⭐ 正面 → 左 に跨いだ瞬間だけ反転
-  if(
+  // ⭐ ドラッグ中 & 正面 → 左に跨いだ瞬間だけ
+  mirrorActive =
     isFacingFront(prevTotal) &&
     prevTotal >= 0 &&
-    currTotal < 0
-  ){
-    mirrorActive = true;
-    if(navigator.vibrate) navigator.vibrate(10);
+    currTotal < 0;
+
+  if(mirrorActive && navigator.vibrate){
+    navigator.vibrate(8);
   }
 }
 
 function endDrag(){
   isDragging = false;
   autoRotate = true;
+
   dragAngle = 0;
-  mirrorActive = false;
+  mirrorActive = false; // ← 強制解除（超重要）
 }
 
 /* ======================
