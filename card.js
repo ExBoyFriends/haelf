@@ -7,7 +7,7 @@ const back  = document.querySelector('.back');
 ====================== */
 const BASE_SPEED = 1.4;
 const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 40; // ← ±40°に変更
+const DRAG_LIMIT = 40; // ±40°に制限
 
 /* ======================
    State
@@ -44,7 +44,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 左傾き時のみ反転画像
+  // 左傾き時のみ反転
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -84,22 +84,23 @@ function onDrag(e){
   const dx = x - lastX;
   lastX = x;
 
-  // 仮計算
   let newDrag = dragAngle + dx * DRAG_SCALE;
 
-  // 現在の面の角度を基準に ±DRAG_LIMIT で制御
+  // 現在のカード角度（表面基準）を取得
   const total = rotation + newDrag;
   const normalized = normalize(total);
   const isBack = normalized > 90 || normalized < -90;
-  const center = isBack ? normalize(rotation + newDrag - 180) : normalize(rotation + newDrag);
+  const angleFromCenter = isBack ? normalize(total - 180) : normalized;
 
-  if(center > DRAG_LIMIT) newDrag = DRAG_LIMIT - rotation;
-  if(center < -DRAG_LIMIT) newDrag = -DRAG_LIMIT - rotation;
+  // ±DRAG_LIMITで制御。範囲外ならドラッグ無効（dragAngleは更新しない）
+  if(angleFromCenter > DRAG_LIMIT || angleFromCenter < -DRAG_LIMIT){
+    return; // ドラッグ操作無視、autoRotateはそのまま動く
+  }
 
   dragAngle = newDrag;
 
   // 左傾き時のみ反転
-  mirrorActive = center < 0;
+  mirrorActive = angleFromCenter < 0;
 }
 
 function endDrag(){
@@ -107,7 +108,7 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-  mirrorActive = false;
+  mirrorActive = false; // 指離したら元に戻す
 }
 
 /* ======================
