@@ -54,14 +54,14 @@ function applyTransform(){
   front.style.setProperty('--shine-x', `${shineX}%`);
   back.style.setProperty('--shine-x',  `${shineX}%`);
 
-  // 左ドラッグで左右反転
-  if(rotation - manualCenter < 0){
-    front.style.transform = `rotateY(0deg) scaleX(-1)`;
-    back.style.transform  = `rotateY(180deg) scaleX(-1)`;
-  } else {
-    front.style.transform = `rotateY(0deg) scaleX(1)`;
-    back.style.transform  = `rotateY(180deg) scaleX(1)`;
-  }
+// 左ドラッグで左右反転（scaleXのみ）
+if (rotation - manualCenter < 0) {
+  front.style.scale = '-1 1';
+  back.style.scale  = '-1 1';
+} else {
+  front.style.scale = '1 1';
+  back.style.scale  = '1 1';
+}
 }
 
 /* ======================
