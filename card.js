@@ -8,13 +8,12 @@ Config
 const BASE_SPEED = 1.4;
 const DRAG_SCALE = 0.35;
 const DRAG_LIMIT = 60; // ±60度でドラッグ可能
-const FRONT_EPS = 6; // 正面に向く判定
 
 /* ======================
 State
 ====================== */
-let rotation = 0;
-let dragAngle = 0;
+let rotation = 0;    // 累積回転
+let dragAngle = 0;   // ドラッグによる変化
 let isDragging = false;
 let autoRotate = true;
 let lastX = 0;
@@ -35,88 +34,86 @@ back.style.backgroundImage = `url(${BACK_NORMAL})`;
 /* ======================
 Utils
 ====================== */
-function getX(e){ return e.touches ? e.touches[0].clientX : e.clientX; }
-function normalize(a){ return ((a + 180) % 360) - 180; }
+function getX(e) { return e.touches ? e.touches[0].clientX : e.clientX; }
+function normalize(a) { return ((a + 180) % 360) - 180; }
 
 /* ======================
 Transform
 ====================== */
-function applyTransform(){
-const total = rotation + dragAngle;
-card.style.transform = `rotateY(${total}deg)`;
+function applyTransform() {
+  const total = rotation + dragAngle;
+  card.style.transform = `rotateY(${total}deg)`;
 
-// ドラッグ中のみ左傾きで反転
-if(isDragging && dragAngle !== 0){
-const normalized = normalize(total);
-const isBack = normalized > 90 || normalized < -90;
-const angleFromCenter = isBack ? normalize(total - 180) : normalized;
-mirrorActive = angleFromCenter < 0;
-} else {
-mirrorActive = false; // 自動回転中は通常画像
-}
-
-if(mirrorActive){
-front.style.backgroundImage = `url(${FRONT_MIRROR})`;
-back.style.backgroundImage = `url(${BACK_MIRROR})`;
-} else {
-front.style.backgroundImage = `url(${FRONT_NORMAL})`;
-back.style.backgroundImage = `url(${BACK_NORMAL})`;
-}
+  // 左傾きでのみ mirror 画像
+  if(mirrorActive){
+    front.style.backgroundImage = `url(${FRONT_MIRROR})`;
+    back.style.backgroundImage = `url(${BACK_MIRROR})`;
+  } else {
+    front.style.backgroundImage = `url(${FRONT_NORMAL})`;
+    back.style.backgroundImage = `url(${BACK_NORMAL})`;
+  }
 }
 
 /* ======================
 Animation
 ====================== */
-function animate(){
-if(autoRotate && !isDragging){
-rotation += BASE_SPEED;
-}
-applyTransform();
-requestAnimationFrame(animate);
+function animate() {
+  if(autoRotate && !isDragging) {
+    rotation += BASE_SPEED;
+  }
+  applyTransform();
+  requestAnimationFrame(animate);
 }
 animate();
 
 /* ======================
 Drag
 ====================== */
-function startDrag(e){
-const x = getX(e);
-const normalized = normalize(rotation);
-const isBack = normalized > 90 || normalized < -90;
-const angleFromCenter = isBack ? normalize(rotation - 180) : normalized;
+function startDrag(e) {
+  const x = getX(e);
+  const normalized = normalize(rotation);
+  const isBack = normalized > 90 || normalized < -90;
+  const angleFromCenter = isBack ? normalize(rotation - 180) : normalized;
 
-// 範囲外ならドラッグ開始せず自動回転続行
-if(angleFromCenter > DRAG_LIMIT || angleFromCenter < -DRAG_LIMIT){
-return;
+  // ±DRAG_LIMIT 外ならドラッグ無効
+  if(angleFromCenter > DRAG_LIMIT || angleFromCenter < -DRAG_LIMIT) return;
+
+  isDragging = true;
+  autoRotate = false;
+  lastX = x;
+  dragAngle = 0;
+  mirrorActive = false;
 }
 
-isDragging = true;
-autoRotate = false;
-lastX = x;
-dragAngle = 0;
-mirrorActive = false;
+function onDrag(e) {
+  if(!isDragging) return;
+
+  const x = getX(e);
+  const dx = x - lastX;
+  lastX = x;
+
+  dragAngle += dx * DRAG_SCALE;
+
+  // 現在の合計角度
+  const total = rotation + dragAngle;
+  const normalized = normalize(total);
+  const isBack = normalized > 90 || normalized < -90;
+  const angleFromCenter = isBack ? normalize(total - 180) : normalized;
+
+  // ±DRAG_LIMIT に収める
+  if(angleFromCenter > DRAG_LIMIT) dragAngle -= angleFromCenter - DRAG_LIMIT;
+  if(angleFromCenter < -DRAG_LIMIT) dragAngle -= angleFromCenter + DRAG_LIMIT;
+
+  // 左傾きで mirror 画像
+  mirrorActive = angleFromCenter < 0;
 }
 
-function onDrag(e){
-if(!isDragging) return;
-
-const x = getX(e);
-const dx = x - lastX;
-lastX = x;
-
-dragAngle += dx * DRAG_SCALE;
-
-// 中心基準で ±DRAG_LIMIT に制限
-if(dragAngle > DRAG_LIMIT) dragAngle = DRAG_LIMIT;
-if(dragAngle < -DRAG_LIMIT) dragAngle = -DRAG_LIMIT;
-}
-
-function endDrag(){
-isDragging = false;
-autoRotate = true;
-rotation += dragAngle;
-dragAngle = 0;
-mirrorActive = false; // 指離したら即戻す
+function endDrag() {
+  isDragging = false;
+  autoRotate = true;
+  rotation += dragAngle;
+  dragAngle = 0;
+  mirrorActive = false;
 }
 
 /* ======================
