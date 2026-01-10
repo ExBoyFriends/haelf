@@ -53,7 +53,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 左に傾いているときだけ反転、指離すと元に戻る
+  // 左に傾いた時だけ反転、指離すと元に戻る
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -81,15 +81,12 @@ animate();
 function startDrag(e){
   const total = rotation;
   const normalized = normalize(total);
-
-  // 裏面補正：180°ずれても0°基準で扱う
   const isBack = normalized > 90 || normalized < -90;
   const angleFromCenter = isBack ? normalize(total - 180) : normalized;
 
-  // ±DRAG_LIMIT 外ならドラッグ無効、自動回転は続く
+  // ±DRAG_LIMIT 外ならドラッグ無効
   if(angleFromCenter > DRAG_LIMIT || angleFromCenter < -DRAG_LIMIT) return;
 
-  // 範囲内ならドラッグ開始
   isDragging = true;
   autoRotate = false;
   lastX = getX(e);
@@ -106,21 +103,21 @@ function onDrag(e){
 
   dragAngle += dx * DRAG_SCALE;
 
-  // カード正面を基準に ±DRAG_LIMIT で制御
+  // カード中心基準で ±DRAG_LIMIT に制限
   const total = rotation + dragAngle;
   const normalized = normalize(total);
   const isBack = normalized > 90 || normalized < -90;
   const angleFromCenter = isBack ? normalize(total - 180) : normalized;
 
-  // 左右範囲制御
-　if(angleFromCenter > DRAG_LIMIT) {
-   dragAngle -= (angleFromCenter - DRAG_LIMIT) * 0.4;  // 0.3は緩やかさの係数
-　}
-　if(angleFromCenter < -DRAG_LIMIT) {
-   dragAngle -= (angleFromCenter + DRAG_LIMIT) * 0.4;
-　}
+  // 左右範囲制御（滑らかに制限）
+  if(angleFromCenter > DRAG_LIMIT){
+    dragAngle -= (angleFromCenter - DRAG_LIMIT) * 0.4;
+  }
+  if(angleFromCenter < -DRAG_LIMIT){
+    dragAngle -= (angleFromCenter + DRAG_LIMIT) * 0.4;
+  }
 
-  // 左傾きの間だけ反転
+  // 左傾き時のみ反転
   mirrorActive = angleFromCenter < 0;
 }
 
@@ -129,7 +126,7 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-  mirrorActive = false; // 指離したら即解除
+  mirrorActive = false;
 }
 
 /* ======================
