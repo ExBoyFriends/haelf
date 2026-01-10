@@ -22,6 +22,16 @@ let mirrorActive = false;
 /* ======================
    Images
 ====================== */
+// URLパラメータ取得
+const params = new URLSearchParams(location.search);
+const cardName = params.get('card');
+
+// URL指定がない場合はエラー画面に飛ばす
+if(!cardName){
+  window.location.href = 'error.html';
+}
+
+
 const FRONT_NORMAL = 'images/king.of.spades.png';
 const FRONT_MIRROR = 'images/joker1.png';
 const BACK_NORMAL  = 'images/zebra.png';
