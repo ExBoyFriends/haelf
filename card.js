@@ -105,10 +105,10 @@ function onDrag(e){
 
   // 左右範囲制御
 　if(angleFromCenter > DRAG_LIMIT) {
-   dragAngle -= (angleFromCenter - DRAG_LIMIT) * 0.3;  // 0.3は緩やかさの係数
+   dragAngle -= (angleFromCenter - DRAG_LIMIT) * 0.4;  // 0.3は緩やかさの係数
 　}
 　if(angleFromCenter < -DRAG_LIMIT) {
-   dragAngle -= (angleFromCenter + DRAG_LIMIT) * 0.3;
+   dragAngle -= (angleFromCenter + DRAG_LIMIT) * 0.4;
 　}
 
   // 左傾きの間だけ反転
