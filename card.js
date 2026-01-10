@@ -33,7 +33,7 @@ if(!cardName){
 
 // ノーマルと反転画像を生成
 const FRONT_NORMAL = `images/${cardName}.png`;       // ex: images/king.of.spades.png
-const FRONT_MIRROR = `images/${cardName}_mirror.png`; // ex: images/king.of.spades_mirror.png
+const FRONT_MIRROR = `images/${cardName.replace(/\.png$/,'')}_mirror.png`; // ex: images/king.of.spades_mirror.png
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/zebra_mirror.png';
 
