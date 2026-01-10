@@ -7,13 +7,13 @@ const back  = document.querySelector('.back');
 ====================== */
 const BASE_SPEED = 1.4;
 const DRAG_SCALE = 0.35;
-const DRAG_LIMIT = 60; // ±60°のドラッグ範囲
+const DRAG_LIMIT = 60;
 
 /* ======================
    State
 ====================== */
-let rotation     = 0; // カードの累積回転
-let dragAngle    = 0; // ドラッグによる回転
+let rotation     = 0;
+let dragAngle    = 0;
 let isDragging   = false;
 let autoRotate   = true;
 let lastX        = 0;
@@ -22,18 +22,18 @@ let mirrorActive = false;
 /* ======================
    Images
 ====================== */
-// URLパラメータ取得
 const params = new URLSearchParams(location.search);
 const cardName = params.get('card');
 
-// URL指定がない場合はエラー画面に飛ばす
+// URL未指定ならエラー画面
 if(!cardName){
   window.location.href = 'error.html';
 }
 
-// ノーマルと反転画像を生成
-const FRONT_NORMAL = `images/${cardName}.png`;       // ex: images/king.of.spades.png
-const FRONT_MIRROR = `images/${cardName.replace(/\.png$/,'')}_mirror.png`; // ex: images/king.of.spades_mirror.png
+// 画像名が .png まで含む場合、_mirror 前に .png を付けないよう調整
+const nameWithoutExt = cardName.replace(/\.png$/,'');
+const FRONT_NORMAL = `images/${cardName}`;             // ex: king.of.spades.png
+const FRONT_MIRROR = `images/${nameWithoutExt}_mirror.png`; // ex: king.of.spades_mirror.png
 const BACK_NORMAL  = 'images/zebra.png';
 const BACK_MIRROR  = 'images/zebra_mirror.png';
 
@@ -54,7 +54,7 @@ function applyTransform(){
   const total = rotation + dragAngle;
   card.style.transform = `rotateY(${total}deg)`;
 
-  // 左に傾いている時だけ反転、指離すと元に戻る
+  // 左傾きのときだけフロント反転、指離すと元に戻る
   if(mirrorActive){
     front.style.backgroundImage = `url(${FRONT_MIRROR})`;
     back.style.backgroundImage  = `url(${BACK_MIRROR})`;
@@ -82,15 +82,11 @@ animate();
 function startDrag(e){
   const total = rotation;
   const normalized = normalize(total);
-
-  // 裏面補正：180°ずれても0°基準で扱う
   const isBack = normalized > 90 || normalized < -90;
   const angleFromCenter = isBack ? normalize(total - 180) : normalized;
 
-  // ±DRAG_LIMIT 外ならドラッグ無効、自動回転は続く
   if(angleFromCenter > DRAG_LIMIT || angleFromCenter < -DRAG_LIMIT) return;
 
-  // 範囲内ならドラッグ開始
   isDragging = true;
   autoRotate = false;
   lastX = getX(e);
@@ -107,17 +103,15 @@ function onDrag(e){
 
   dragAngle += dx * DRAG_SCALE;
 
-  // カード正面を基準に ±DRAG_LIMIT で制御
   const total = rotation + dragAngle;
   const normalized = normalize(total);
   const isBack = normalized > 90 || normalized < -90;
   const angleFromCenter = isBack ? normalize(total - 180) : normalized;
 
-  // 左右範囲制御（中心基準）
+  // 左右範囲制御
   if(angleFromCenter > DRAG_LIMIT) dragAngle -= angleFromCenter - DRAG_LIMIT;
   if(angleFromCenter < -DRAG_LIMIT) dragAngle -= angleFromCenter + DRAG_LIMIT;
 
-  // 左傾きの間だけ反転
   mirrorActive = angleFromCenter < 0;
 }
 
@@ -126,7 +120,7 @@ function endDrag(){
   autoRotate = true;
   rotation += dragAngle;
   dragAngle = 0;
-  mirrorActive = false; // 指離したら即解除
+  mirrorActive = false;
 }
 
 /* ======================
