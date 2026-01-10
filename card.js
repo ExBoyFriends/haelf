@@ -31,11 +31,10 @@ if(!cardName){
   window.location.href = 'error.html';
 }
 
-
-const FRONT_NORMAL = 'images/king.of.spades.png';
-const FRONT_MIRROR = 'images/joker1.png';
+const FRONT_NORMAL = `images/${cardName}.png`;
+const FRONT_MIRROR = `images/${cardName}_mirror.png`;
 const BACK_NORMAL  = 'images/zebra.png';
-const BACK_MIRROR  = 'images/joker2.png';
+const BACK_MIRROR  = 'images/ zebra_mirror.png';
 
 /* 初期 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
