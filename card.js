@@ -24,17 +24,18 @@ let mirrorActive = false;
 ====================== */
 // URLパラメータ取得
 const params = new URLSearchParams(location.search);
-const cardName = params.get('card');
+const frontName = params.get('front'); // 例: king.of.spades
+const mirrorName = params.get('mirror'); // 例: king
 
 // URL指定がない場合はエラー画面に飛ばす
 if(!cardName){
   window.location.href = 'error.html';
 }
 
-const FRONT_NORMAL = `images/${cardName}.png`;
-const FRONT_MIRROR = `images/${cardName}_mirror.png`;
-const BACK_NORMAL  = 'images/zebra.png';
-const BACK_MIRROR  = 'images/zebra_mirror.png';
+const FRONT_NORMAL = `images/${frontName}.png`;
+const FRONT_MIRROR = `images/${mirrorName}.png`;
+const BACK_NORMAL = 'images/zebra.png';
+const BACK_MIRROR = 'images/zebra_mirror.png';
 
 /* 初期 */
 front.style.backgroundImage = `url(${FRONT_NORMAL})`;
