@@ -104,8 +104,12 @@ function onDrag(e){
   const angleFromCenter = isBack ? normalize(total - 180) : normalized;
 
   // 左右範囲制御
-  if(angleFromCenter > DRAG_LIMIT) dragAngle -= angleFromCenter - DRAG_LIMIT;
-  if(angleFromCenter < -DRAG_LIMIT) dragAngle -= angleFromCenter + DRAG_LIMIT;
+　if(angleFromCenter > DRAG_LIMIT) {
+   dragAngle -= (angleFromCenter - DRAG_LIMIT) * 0.3;  // 0.3は緩やかさの係数
+　}
+　if(angleFromCenter < -DRAG_LIMIT) {
+   dragAngle -= (angleFromCenter + DRAG_LIMIT) * 0.3;
+　}
 
   // 左傾きの間だけ反転
   mirrorActive = angleFromCenter < 0;
