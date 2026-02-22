@@ -191,3 +191,15 @@ card.addEventListener('touchmove',  onDrag,    { passive:true });
 card.addEventListener('touchend',   endDrag);
 
 card.addEventListener('contextmenu', e => e.preventDefault());
+
+
+window.addEventListener("load", () => {
+  const fade = document.getElementById("fadeLayer");
+  requestAnimationFrame(() => {
+    fade.style.opacity = "0";
+  });
+
+  setTimeout(() => {
+    fade.remove();
+  }, 1300);
+});
