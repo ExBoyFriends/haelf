@@ -5,7 +5,7 @@ html, body {
   overflow: hidden;
   touch-action: pan-y;
 
-  background: url("./images/background.webp") center center / cover no-repeat fixed;
+  background: url("/images/background.webp") center center / cover no-repeat fixed;
 }
 
 body {
