@@ -25,15 +25,15 @@ const CARD_SETS = {
   queen: {
     frontNormal:  'images/queen.of.hearts.png',
     frontMirror:  'images/queen.of.hearts_mirror.png',
-    backNormal:   'images/tiger.png',
-    backMirror:   'images/tiger_mirror.png'
+    backNormal:   'images/zebra.png',
+    backMirror:   'images/zebra_mirror.png'
   },
 
   joker: {
     frontNormal:  'images/joker.png',
     frontMirror:  'images/joker_mirror.png',
-    backNormal:   'images/noise.png',
-    backMirror:   'images/noise_mirror.png'
+    backNormal:   'images/zebra.png',
+    backMirror:   'images/zebra_mirror.png'
   }
 
 };
