@@ -4,9 +4,10 @@ html, body {
   height: 100%;
   background: #000;
   overflow: hidden;
-  
-    /* ズーム禁止 */
   touch-action: pan-y;
+
+  background: url("images/background.webp") center center / cover no-repeat fixed;
+}
 }
 
 body {
