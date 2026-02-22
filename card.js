@@ -65,6 +65,10 @@ function getCardType() {
 
   return randomType;
 }
+
+const currentType = getCardType();
+const currentCard = CARD_SETS[currentType];
+
 /* ======================
    STATE
 ====================== */
