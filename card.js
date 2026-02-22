@@ -42,13 +42,29 @@ const CARD_SETS = {
    URL PARAM
 ====================== */
 function getCardType() {
+
   const params = new URLSearchParams(window.location.search);
-  return params.get("type") || "king";
+  const type = params.get("type");
+  const mode = params.get("mode");
+
+  const keys = Object.keys(CARD_SETS);
+
+  // typeが有効ならそれを使う
+  if (type && CARD_SETS[type]) {
+    return type;
+  }
+
+  // ランダム選択
+  const randomType = keys[Math.floor(Math.random() * keys.length)];
+
+  // shareモードならURLを書き換える
+  if (mode === "share") {
+    const newUrl = `${window.location.pathname}?type=${randomType}&mode=share`;
+    window.history.replaceState(null, "", newUrl);
+  }
+
+  return randomType;
 }
-
-const currentType = getCardType();
-const currentCard = CARD_SETS[currentType] || CARD_SETS.king;
-
 /* ======================
    STATE
 ====================== */
