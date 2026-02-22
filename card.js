@@ -194,12 +194,19 @@ card.addEventListener('contextmenu', e => e.preventDefault());
 
 
 window.addEventListener("load", () => {
+
   const fade = document.getElementById("fadeLayer");
-  requestAnimationFrame(() => {
-    fade.style.opacity = "0";
-  });
 
   setTimeout(() => {
-    fade.remove();
-  }, 1300);
+    fade.style.opacity = "0";
+  }, 400);
+
+  setTimeout(() => {
+    autoRotate = true;
+
+    // 完全透明になったあと表示を消すだけ
+    fade.style.display = "none";
+
+  }, 2800);
+
 });
