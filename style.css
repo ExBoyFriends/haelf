@@ -7,7 +7,6 @@ html, body {
 
   background: url("./images/background.webp") center center / cover no-repeat fixed;
 }
-}
 
 body {
   display: flex;
