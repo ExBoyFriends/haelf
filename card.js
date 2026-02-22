@@ -23,15 +23,15 @@ const CARD_SETS = {
   },
 
   queen: {
-    frontNormal:  'images/queen.of.hearts.png',
-    frontMirror:  'images/queen.of.hearts_mirror.png',
+    frontNormal:  'images/queen.of.clubs.png',
+    frontMirror:  'images/queen.of.clubs_mirror.png',
     backNormal:   'images/zebra.png',
     backMirror:   'images/zebra_mirror.png'
   },
 
   joker: {
-    frontNormal:  'images/joker.png',
-    frontMirror:  'images/joker_mirror.png',
+    frontNormal:  'images/joker.of.hearts.png',
+    frontMirror:  'images/joker.of.hearts_mirror.png',
     backNormal:   'images/zebra.png',
     backMirror:   'images/zebra_mirror.png'
   }
