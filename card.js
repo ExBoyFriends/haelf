@@ -29,7 +29,7 @@ const CARD_SETS = {
     backMirror:   'images/zebra_mirror.png'
   },
 
-  joker: {
+  jack: {
     frontNormal:  'images/jack.of.hearts.png',
     frontMirror:  'images/jack.of.hearts_mirror.png',
     backNormal:   'images/zebra.png',
