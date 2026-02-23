@@ -5,7 +5,7 @@ const back  = document.querySelector('.back');
 /* ======================
    CONFIG
 ====================== */
-const BASE_SPEED    = 0.4;
+const BASE_SPEED    = 0.8;
 const DRAG_SCALE    = 0.35;
 const DRAG_LIMIT    = 60;
 const INERTIA_DECAY = 0.92;
